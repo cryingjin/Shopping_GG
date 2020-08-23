@@ -11,4 +11,4 @@ def broadcast_count(df) :
     df = pd.merge(df, onair[["NEW상품명", '상품총방송횟수']].drop_duplicates() ,on = "NEW상품명", how="left")
     df = pd.merge(df, onair[["브랜드", '브랜드총방송횟수']].drop_duplicates(), on = "브랜드", how="left")
 
-    return df 
+    return df
