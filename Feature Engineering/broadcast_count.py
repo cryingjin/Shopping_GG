@@ -1,13 +1,13 @@
 # 동일 상품 / 브랜드 총 방송횟수 - 먼저 돌리기 !!
-## 판매횟수만 따지기 위해서는 원래 데이터를 봐야 하고,
-## 방송횟수를 따지기 위해서는 원래 데이터에서 '노출(분)' NaN값을 drop한 dataframe을 봐야 함 !
-
 def broadcast_count(df) :
-    onair = df.dropna(subset = ["노출(분)"]) # 21525 rows
+    # 동일 상품 / 브랜드 총 방송횟수 - 먼저 돌리기 !!
+    item_count = df.dropna(subset = ["노출(분)"]).groupby('NEW상품명').count()['방송일시'].reset_index().rename(columns = {'방송일시' : '상품노출횟수'})
+    brand_count = df.dropna(subset = ["노출(분)"]).groupby('브랜드').count()['방송일시'].reset_index().rename(columns = {'방송일시' : '브랜드노출횟수'})
 
-    onair["상품총방송횟수"] = onair.groupby(["NEW상품명"])["방송일시"].transform('size')
-    onair["브랜드총방송횟수"] = onair.groupby(["브랜드"])["방송일시"].transform('size')
+    df = df.merge(item_count, on = 'NEW상품명', how = 'left')
+    df = df.merge(brand_count, on = '브랜드', how = 'left')
 
-    final = pd.merge(df, onair[["브랜드", '브랜드총방송횟수']].drop_duplicates(), on = "브랜드", how="left")
+    df["상품노출횟수"] = df["상품노출횟수"].fillna(method='ffill')
+    df["브랜드노출횟수"] = df["브랜드노출횟수"].fillna(0)
 
-    return final
+    return df
