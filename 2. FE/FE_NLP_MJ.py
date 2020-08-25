@@ -26,10 +26,10 @@ def zero_pad_from_2Darray_R(aa, fixed_length, padding_value=0):
     return np.concatenate(rows, axis=0).reshape(-1, fixed_length)
 
 
-def product_name_embedding(df, w2v_m = "skip", dim = 40, win = 3,min_cnt = 2):
+def product_name_embedding_ver1(df, w2v_m = "skip", dim = 10, win = 3,min_cnt = 2):
     
     corpus = make_corpus_M(df)
-
+    
     if w2v_m == "skip" :
         Skip_Gram_model = Word2Vec(corpus, size=dim, window=win, min_count=min_cnt, workers=1, iter=500, sg=1)
         words = Skip_Gram_model.wv.index2word #one-hot encoding알아서 해줌 
@@ -72,7 +72,15 @@ def product_name_embedding(df, w2v_m = "skip", dim = 40, win = 3,min_cnt = 2):
 
     max_vec_dim = max(vec_size) #embedding dim
     assert len(vec_em) == len(df)
+    feature_name = ['v' + str(i) for i in range(max_vec_dim)]
 
-    p_name_embedded = zero_pad_from_2Darray_R(vec_em, max_vev_dim)
 
-    return p_name_embedded
+    p_name_embedded = zero_pad_from_2Darray_R(vec_em, max_vec_dim)
+    
+    #make dataframe
+    vector_df = pd.DataFrame(p_name_embedded,columns = feature_name)
+    df = pd.merge(df,vector_df,left_index = True, right_index = True)
+
+
+
+    return df
