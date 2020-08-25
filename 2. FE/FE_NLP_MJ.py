@@ -44,7 +44,7 @@ def product_name_embedding_ver1(df, w2v_m = "skip", dim = 10, win = 3,min_cnt = 
     vec_em = []
     for j in range(len(df)) : 
         vec_con = []
-        test = ['/'.join(p) for p in tagger.pos(df['상품명다시'].iloc[j]) if p[1] in tag_N]
+        test = ['/'.join(p) for p in tagger.pos(df['NEW상품명'].iloc[j]) if p[1] in tag_N]
         for k in (test):
             try :
                 vec_con.extend(vectors[words.index(k)]) #w2v으로 임베딩된 토큰만 concate
