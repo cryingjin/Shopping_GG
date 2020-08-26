@@ -7,29 +7,28 @@ import matplotlib.pyplot as plt
 from eunjeon import Mecab
 #shell -> pip install eunjeon --user
 
-def make_corpus_M(df_for_corpus):
-    corpus = []
-    tag_N = ["NNG", "NNP", "NNB", " NNBC", "NR", "NP","SL","SN"]
-    #토크나이징
-    tagger = Mecab()
-
-
-    for i in range(len(df_for_corpus)):
-        corpus.append(['/'.join(p) for p in tagger.pos(df_for_corpus['NEW상품명'].loc[i]) if p[1] in tag_N])
-        
-    return corpus
-
-def zero_pad_from_2Darray_R(aa, fixed_length, padding_value=0):
-    rows = []
-    for a in aa:
-        rows.append(np.pad(a, (0, fixed_length), 'constant', constant_values=padding_value)[:fixed_length])
-    return np.concatenate(rows, axis=0).reshape(-1, fixed_length)
-
 
 def product_name_embedding_ver1(df, w2v_m = "skip", dim = 10, win = 3,min_cnt = 2):
     #using MeCab(), Just Concatenate, zero-padding (right)
+    tagger = Mecab()
+    tag_N = ["NNG", "NNP", "NNB", " NNBC", "NR", "NP","SL","SN"]
+    def make_corpus_M(df_for_corpus):
+        corpus = []
+        #토크나이징
+
+        for i in range(len(df_for_corpus)):
+            corpus.append(['/'.join(p) for p in tagger.pos(df_for_corpus['NEW상품명'].loc[i]) if p[1] in tag_N])
+
+        return corpus
+
+    def zero_pad_from_2Darray_R(aa, fixed_length, padding_value=0):
+        rows = []
+        for a in aa:
+            rows.append(np.pad(a, (0, fixed_length), 'constant', constant_values=padding_value)[:fixed_length])
+        return np.concatenate(rows, axis=0).reshape(-1, fixed_length)
+
+
     corpus = make_corpus_M(df)
-    
     if w2v_m == "skip" :
         Skip_Gram_model = Word2Vec(corpus, size=dim, window=win, min_count=min_cnt, workers=1, iter=500, sg=1)
         words = Skip_Gram_model.wv.index2word #one-hot encoding알아서 해줌 
@@ -71,6 +70,23 @@ def product_name_embedding_ver1(df, w2v_m = "skip", dim = 10, win = 3,min_cnt = 
 
 def product_name_embedding_ver2(df, w2v_m = "skip", dim = 10, win = 3,min_cnt = 2):
     #using MeCab(), product name embedding = mean of tocken vectors
+    tagger = Mecab()
+    tag_N = ["NNG", "NNP", "NNB", " NNBC", "NR", "NP","SL","SN"]
+    def make_corpus_M(df_for_corpus):
+        corpus = []
+        #토크나이징
+
+        for i in range(len(df_for_corpus)):
+            corpus.append(['/'.join(p) for p in tagger.pos(df_for_corpus['NEW상품명'].loc[i]) if p[1] in tag_N])
+
+        return corpus
+
+    def zero_pad_from_2Darray_R(aa, fixed_length, padding_value=0):
+        rows = []
+        for a in aa:
+            rows.append(np.pad(a, (0, fixed_length), 'constant', constant_values=padding_value)[:fixed_length])
+        return np.concatenate(rows, axis=0).reshape(-1, fixed_length)
+
     corpus = make_corpus_M(df)
     
     if w2v_m == "skip" :
