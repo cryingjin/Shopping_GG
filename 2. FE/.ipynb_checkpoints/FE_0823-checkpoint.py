@@ -80,7 +80,7 @@ def engineering_DatePrice(df):
     year = input()
     holidays = getHoliday(year)
     df = df.merge(holidays[['locdate', 'isHoliday']], left_on = df['방송일시'].dt.date.astype(str), right_on = 'locdate', how = 'left').drop('locdate', axis = 1)
-    
+    df['isHoliday'] = df['isHoliday'].apply(lambda x : 1 if x == 'Y' else 0)
     ## [날짜 및 시간대]
     df['방송월'] = df['방송일시'].dt.month
     df['방송일'] = df['방송일시'].dt.day
