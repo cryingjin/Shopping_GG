@@ -5,28 +5,42 @@ import numpy as np
 import pandas as pd
 import json
 import requests
+from datetime import datetime, timedelta
 
 # 동일 상품 / 브랜드 총 방송횟수 - 먼저 돌리기 !!
 ## 판매횟수만 따지기 위해서는 원래 데이터를 봐야 하고,
-## 방송횟수를 따지기 위해서는 원래 데이터에서 '노출(분)' NaN값을 drop한 dataframe을 봐야 함 !\
+## 방송횟수를 따지기 위해서는 원래 데이터에서 '노출(분)' NaN값을 drop한 dataframe을 봐야 함 !
 
 ## -- JB -- (수정필요??)
 def engineering_TimeDiff(df) :
     
     # [상품 및 브랜드 방송 노출 횟수] 동일 상품 / 브랜드 총 방송횟수 - 먼저 돌리기 !!
-    item_count = df.dropna(subset = ["노출(분)"]).groupby('NEW상품명').count()['방송일시'].reset_index().rename(columns = {'방송일시' : '상품노출횟수'})
-    brand_count = df.dropna(subset = ["노출(분)"]).groupby('브랜드').count()['방송일시'].reset_index().rename(columns = {'방송일시' : '브랜드노출횟수'})
-    df = df.merge(item_count, on = 'NEW상품명', how = 'left')
-    df = df.merge(brand_count, on = '브랜드', how = 'left')
+#     item_count = df.dropna(subset = ["노출(분)"]).groupby('NEW상품명').count()['방송일시'].reset_index().rename(columns = {'방송일시' : '상품노출횟수'})
+#     brand_count = df.dropna(subset = ["노출(분)"]).groupby('브랜드').count()['방송일시'].reset_index().rename(columns = {'방송일시' : '브랜드노출횟수'})
+#     df = df.merge(item_count, on = 'NEW상품명', how = 'left')
+#     df = df.merge(brand_count, on = '브랜드', how = 'left')
 
     # [동일상품 방송 시간차] 동일 상품 별 시간 간격
-#     df["동일상품시간차"] = df.groupby(["NEW상품명"])["방송일시"].diff()
-    
-    # [상품 및 브랜드 총 판매 횟수 ]동일 상품 / 브랜드 총 판매횟수
     df['방송일'] = df['방송일시'].dt.date
+    t = df.groupby(['NEW상품명','방송일'])['취급액'].sum().reset_index()[['NEW상품명','방송일']]
+    total = []
+    for item in t['NEW상품명'].unique():
+        timediff = t.loc[t['NEW상품명'] == item, '방송일']
+        a = pd.DataFrame(list(zip(timediff, timediff.diff())))
+        a['NEW상품명'] = item
+        total.extend(a.values)
+    timediff = pd.DataFrame(total, columns = ['방송일', '방송시간차', 'NEW상품명'])
+    timediff.loc[timediff['방송시간차'].isnull(), '방송시간차'] = 0
+    timediff['방송시간차'] = timediff['방송시간차'].apply(lambda x : x.days if x != 0 else x)
+    df = df.merge(timediff, on = ['방송일', 'NEW상품명'], how = 'left')
+    
+    # [상품 및 브랜드 총 판매 횟수 ] 동일 상품 / 브랜드 총 방송횟수
     df = df.merge(df.groupby('NEW상품명')['방송일'].nunique().reset_index().rename(columns = {'방송일' : '상품방송횟수'}), on = 'NEW상품명', how = 'left')
     
     df = df.merge(df.groupby('브랜드')['방송일'].nunique().reset_index().rename(columns = {'방송일' : '브랜드방송횟수'}), on = '브랜드', how = 'left')
+    
+    df = df.drop('방송일', axis = 1)
+    
     return df
 
 ## -- YJ --
@@ -58,6 +72,7 @@ def engineering_DatePrice(df):
         holidays['locdate'] = holidays['locdate'].astype(str).apply(lambda x : '-'.join([x[:4], x[4:6], x[6:]]))
         return holidays
     
+    # 무형 상품군 NEW상품명 채워주기(무형 상품군은 어짜피 나중에 버릴것)
     df.loc[df['NEW상품명'].isnull(), 'NEW상품명'] = df.loc[df['NEW상품명'].isnull(), '상품명']
     
     ## [공휴일여부]
@@ -68,6 +83,7 @@ def engineering_DatePrice(df):
     
     ## [날짜 및 시간대]
     df['방송월'] = df['방송일시'].dt.month
+    df['방송일'] = df['방송일시'].dt.day
     df['방송시간(시간)'] = df['방송일시'].dt.hour.apply(lambda x : 24 if x == 0 else x)
     df['방송시간(분)'] = df['방송일시'].dt.minute
     
@@ -113,5 +129,30 @@ def engineering_DatePrice(df):
     ## [상품군] 평균 판매단가 - 해당 상품 판매단가
     df['상품군평균판매단가차이'] = df['상품군_평균판매단가'] - df['판매단가']
     
+    # [결합상품여부]
+    df['결합상품'] = df['NEW상품명'].apply(lambda x : 1 if '+' in x else 0)
+    
     return df
 
+
+def engineering_trend(df):
+    sale = pd.read_excel(os.path.join('..', '0.Data', '01_제공데이터', 'sale_data_v05_0828.xlsx'))
+    sale['방송일'] = sale['방송일시'].dt.day
+    sale['방송일'] = pd.to_datetime(sale['방송일'])
+    df['방송일'] = pd.to_datetime(df['방송일'])
+    temp = sale.groupby(['상품군', '방송일'])['취급액'].sum().reset_index()
+    df['log최근3개월상품군추세'] = None
+    
+    for cate, date in df[['상품군', '방송일']].drop_duplicates().values:
+
+        log_y = np.log(list(temp.loc[(temp['상품군'] == cate) & (temp['방송일'] < date) & (date - timedelta(days = 90) < temp['방송일']), '취급액'] + 1))
+        log_x = np.arange(len(log_y))
+        try:
+            log_z = np.polyfit(log_x, log_y, 1)[0]
+        except:
+            log_z = 0
+
+        df.loc[(df['상품군'] == cate) & (df['방송일'] == date), 'log최근3개월상품군추세'] = log_z
+        
+    return df
+    
