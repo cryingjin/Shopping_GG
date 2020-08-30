@@ -39,7 +39,7 @@ class FE_W2V:
             rows.append(np.pad(a, (0, fixed_length), 'constant', constant_values=padding_value)[:fixed_length])
         return np.concatenate(rows, axis=0).reshape(-1, fixed_length)
     
-    def product_name_embedding_ver1(self, df_name = None,w2v_m = "skip"):
+    def product_name_embedding_ver1(self, df_name = None):
     #using MeCab(), Just Concatenate, zero-padding (right)
         df_ver1 = df_name if df_name is not None else self.df
 
@@ -75,7 +75,7 @@ class FE_W2V:
         return df_ver1
         
 
-    def product_name_embedding_ver2(self, df_name = None, w2v_m = "skip"):
+    def product_name_embedding_ver2(self, df_name = None):
     #using MeCab(), product name embedding = mean of tocken vectors
         df_ver2 = df_name if df_name is not None else self.df
 
@@ -116,7 +116,7 @@ class FE_W2V:
     
     
     def product_name_embedding_ver3(self, df_name = None, w2v_m = "skip"):
-    #using MeCab(), product name embedding = mean of tocken vectors
+    #using our corpus, product name embedding = mean of tocken vectors
         df_ver3 = df_name if df_name is not None else self.df
         #assert df_ver2 != None
         
@@ -158,6 +158,6 @@ class FE_W2V:
         df_name_tmp = self.df["NEW상품명"].reset_index(drop = True)
         vector_df = pd.merge(df_name_tmp,vector_df_tmp,left_index = True, right_index = True)
         df_ver3 = pd.merge(self.df,vector_df.drop_duplicates(),on = "NEW상품명",how = "left").set_index(self.df.index)
-        print(len(vector_df), len(df_name_tmp), len(vector_df), len(df_ver3))
+        #print(len(vector_df), len(df_name_tmp), len(vector_df), len(df_ver3))
 
         return df_ver3
