@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from eunjeon import Mecab
 #shell -> pip install eunjeon --user
 
-def make_copus_our(df):
+def make_corpus_our(df):
     result_list = []
     for i in range(len(df)):
         tmp = []
