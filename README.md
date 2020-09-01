@@ -7,6 +7,11 @@
 |08.27|xgb|optuna hyperparameter tuning 시도|[0827_optuna.ipynb](https://github.com/cryingjin/Shopping_GG/blob/jbeen2/Modeling/0827_optuna.ipynb)|
 |09.01|lgbm|FE (파라미터 튜닝 노노)|[0901_lgbm_JB.ipynb](https://github.com/cryingjin/Shopping_GG/blob/jbeen2/Modeling/0901_lgbm_JB.ipynb)|
 
+
+.
+
+
+
 ### issue (0901) :sweat_drops:
 :heavy_check_mark: hyperparameter tuning 시도해보기           
 
