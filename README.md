@@ -8,6 +8,10 @@
 |09.01|lgbm|FE (파라미터 튜닝 노노)|[0901_lgbm_JB.ipynb](https://github.com/cryingjin/Shopping_GG/blob/jbeen2/Modeling/0901_lgbm_JB.ipynb)|
 
 ### issue (0901) :sweat_drops:
-:heavy_check_mark: hyperparameter tuning 시도해보기 
-:heavy_check_mark: Feature를 좀 봐야 할 듯... MAPE 30 어케 찍지 ? 
-:heavy_check_mark: XGboost는 10월, LGBM은 11월을 못맞춘다 -> 앙상블 ... 시급..
+:heavy_check_mark: hyperparameter tuning 시도해보기           
+
+
+:heavy_check_mark: Feature를 좀 봐야 할 듯... MAPE 30 어케 찍지 ?             
+
+
+:heavy_check_mark: XGboost는 10월, LGBM은 11월을 못맞춘다 -> 앙상블 ... 시급..            
