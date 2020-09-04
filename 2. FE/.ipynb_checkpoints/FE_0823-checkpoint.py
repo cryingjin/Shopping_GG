@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 import joblib
 import numpy as np
 import pandas as pd
@@ -56,8 +57,8 @@ def engineering_Soldout(df):
 
 def engineering_DatePrice(df):
     # 데이터 로드
-    item = pd.read_excel(os.path.join('..', '0.Data', '01_제공데이터', 'item_meta_v03_0823.xlsx'))
-    data = joblib.load(os.path.join('..', '0.Data', '01_제공데이터', '0823_prep4data.pkl'))
+    item = pd.read_excel(os.path.join('..', '..','0.Data', '01_제공데이터', 'item_meta_v03_0823.xlsx'))
+    data = joblib.load(os.path.join('..', '..','0.Data', '01_제공데이터', '0823_prep4data.pkl'))
     itemcategory = data['itemcategory']
     mothercode = data['mothercode']
     brand = data['brand']
@@ -135,24 +136,53 @@ def engineering_DatePrice(df):
     return df
 
 
-def engineering_trend(df):
-    sale = pd.read_excel(os.path.join('..', '0.Data', '01_제공데이터', 'sale_data_v05_0828.xlsx'))
-    sale['방송일'] = sale['방송일시'].dt.day
-    sale['방송일'] = pd.to_datetime(sale['방송일'])
-    df['방송일'] = pd.to_datetime(df['방송일'])
-    temp = sale.groupby(['상품군', '방송일'])['취급액'].sum().reset_index()
+def engineering_trendnorder(df):
+    # 방송날짜별 상품군별 취급액 계산
+    sale = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'sale_data_v05_0828.xlsx'))
+    sale['방송날짜'] = sale['방송일시'].dt.date
+    temp = sale.groupby(['상품군', '방송날짜'])['취급액'].sum().reset_index()
+    temp['방송날짜'] = pd.to_datetime(temp['방송날짜'])
+    
     df['log최근3개월상품군추세'] = None
     
-    for cate, date in df[['상품군', '방송일']].drop_duplicates().values:
-
-        log_y = np.log(list(temp.loc[(temp['상품군'] == cate) & (temp['방송일'] < date) & (date - timedelta(days = 90) < temp['방송일']), '취급액'] + 1))
+    # 방송날짜 90일 전부터 방송날짜 전까지의 취급액 log 추세 구하기
+    df['방송날짜'] = df['방송일시'].dt.date
+    df['방송날짜'] = pd.to_datetime(df['방송날짜'])
+    for cate, date in df[['상품군', '방송날짜']].drop_duplicates().values:
+        log_y = np.log(list(temp.loc[(temp['상품군'] == cate) & (temp['방송날짜'] < date) & (date - timedelta(days = 90) < temp['방송날짜']), '취급액'] + 1))
         log_x = np.arange(len(log_y))
         try:
             log_z = np.polyfit(log_x, log_y, 1)[0]
         except:
             log_z = 0
 
-        df.loc[(df['상품군'] == cate) & (df['방송일'] == date), 'log최근3개월상품군추세'] = log_z
-        
+        df.loc[(df['상품군'] == cate) & (df['방송날짜'] == date), 'log최근3개월상품군추세'] = log_z
+    
+    
+    sale['방송월'] = sale['방송일시'].dt.month
+    sale['방송시간(시간)'] = sale['방송일시'].dt.hour
+    sale['방송시간(분)'] = sale['방송일시'].dt.minute
+    sale['판매량'] = sale['취급액'] / sale['판매단가']
+    sale['판매량'] = sale['판매량'].fillna(0).apply(lambda x : math.ceil(x))
+    
+    # 월별 상품군 판매량
+    temp = pd.pivot_table(sale, index = '상품군', columns = '방송월', values = '판매량', aggfunc = np.sum).T.reset_index()
+    temp.columns = [temp.columns[0]] + list(map(lambda x : '월별판매랑_' + x, temp.columns[1:]))
+    df = df.merge(temp, on = '방송월', how = 'left')
+    
+    # 시간대별 상품군 판매량
+    temp = pd.pivot_table(sale, index = '상품군', columns = '방송시간(시간)', values = '판매량', aggfunc = np.sum).T.reset_index()
+    temp.columns = [temp.columns[0]] + list(map(lambda x : '시간대별판매랑_' + x, temp.columns[1:]))
+    df = df.merge(temp, on = '방송시간(시간)', how = 'left')
+    
+    # 시간별 상품군 판매량
+    temp = pd.pivot_table(sale, index = '상품군', columns = '방송시간(분)', values = '판매량', aggfunc = np.mean).T.reset_index()
+    temp.columns = [temp.columns[0]] + list(map(lambda x : '시간별판매랑_' + x, temp.columns[1:]))
+    df = df.merge(temp, on = '방송시간(분)', how = 'left')
+    
+    # 할인율
+    rt = pd.read_csv(os.path.join('..', '..', '0.Data', '01_제공데이터', 'prep_discountRt.csv'), encoding = 'cp949')
+    df['할인율'] = rt.values
+    
     return df
     
