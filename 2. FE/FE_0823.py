@@ -83,11 +83,14 @@ def engineering_DatePrice(df):
     df = df.merge(holidays[['locdate', 'isHoliday']], left_on = df['방송일시'].dt.date.astype(str), right_on = 'locdate', how = 'left').drop('locdate', axis = 1)
     df['isHoliday'] = df['isHoliday'].apply(lambda x : 1 if x == 'Y' else 0)
     ## [날짜 및 시간대]
+    df['방송년도'] = df['방송일시'].dt.year
     df['방송월'] = df['방송일시'].dt.month
     df['방송일'] = df['방송일시'].dt.day
     df['방송시간(시간)'] = df['방송일시'].dt.hour.apply(lambda x : 24 if x == 0 else x)
     df['방송시간(분)'] = df['방송일시'].dt.minute
-    
+    df.loc[df['방송년도'] == 2020, '방송월'] = 12 # 2019년 12월31일의 연장방송이므로 
+    df.loc[df['방송년도'] == 2020, '방송일'] = 31
+    df = df.drop('방송년도', axis = 1)
     
     ## [평일여부] (평일 : 0, 주말 : 1)
     df['평일여부'] = df['방송일시'].dt.weekday.apply(lambda x : 0 if x < 5 else 1)
