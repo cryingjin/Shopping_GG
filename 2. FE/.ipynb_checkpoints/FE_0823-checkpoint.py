@@ -12,14 +12,8 @@ from datetime import datetime, timedelta
 ## 판매횟수만 따지기 위해서는 원래 데이터를 봐야 하고,
 ## 방송횟수를 따지기 위해서는 원래 데이터에서 '노출(분)' NaN값을 drop한 dataframe을 봐야 함 !
 
-## -- JB -- (수정필요??)
+## -- JB -- 
 def engineering_TimeDiff(df) :
-    
-    # [상품 및 브랜드 방송 노출 횟수] 동일 상품 / 브랜드 총 방송횟수 - 먼저 돌리기 !!
-#     item_count = df.dropna(subset = ["노출(분)"]).groupby('NEW상품명').count()['방송일시'].reset_index().rename(columns = {'방송일시' : '상품노출횟수'})
-#     brand_count = df.dropna(subset = ["노출(분)"]).groupby('브랜드').count()['방송일시'].reset_index().rename(columns = {'방송일시' : '브랜드노출횟수'})
-#     df = df.merge(item_count, on = 'NEW상품명', how = 'left')
-#     df = df.merge(brand_count, on = '브랜드', how = 'left')
 
     # [동일상품 방송 시간차] 동일 상품 별 시간 간격
     df['방송일'] = df['방송일시'].dt.date
@@ -42,16 +36,11 @@ def engineering_TimeDiff(df) :
     
     df = df.drop('방송일', axis = 1)
     
-    return df
-
-## -- YJ --
-
-def engineering_Soldout(df):
     # [조기매진] (20분 이하 혹은 20분과 30분 사이에 조기 종료된 프로그램 선별)
     df['조기매진'] = df['노출(분)'].map(lambda x: 1 if ((x < 20) | (x > 20) & (x < 30)) else 0)     # 20분 이하, 20-30 분 사이
     # 방송일시의 nan 값 채워주는 부분
     df["노출(분)"] = df["노출(분)"].fillna(method='ffill')
-    return df
+    return df 
 
 ## -- JS --
 
@@ -189,3 +178,27 @@ def engineering_trendnorder(df):
     
     return df
     
+
+def engineering_zscore(df):
+
+    def zscore(price, mean, std):
+        if std == 0:
+            return 0
+        else:
+            return (price - mean) / std
+
+    df["상품군_zscore"] = df.apply(lambda x: zscore(x["판매단가"], x["상품군_평균판매단가"], x["상품군_표준편차"]), axis=1)
+    df["상품군&브랜드_zscore"] = df.apply(lambda x: zscore(x["판매단가"], x["상품군&브랜드_평균판매단가"], x["상품군&브랜드_표준편차"]), axis=1)
+    df["마더코드_zscore"] = df.apply(lambda x: zscore(x["판매단가"], x["마더코드_평균판매단가"], x["마더코드_표준편차"]), axis=1)
+    df["NEW_zscore"] = df.apply(lambda x: zscore(x["판매단가"], x["NEW_평균판매단가"], x["NEW_표준편차"]), axis=1)
+
+    # z-score 만들어 줬으니 평균, 분산, 표준편차 제거!
+    stat_mean = df.columns[df.columns.str.contains("_평균판매단가")]
+    stat_var = df.columns[df.columns.str.contains("분산")]
+    stat_std = df.columns[df.columns.str.contains("표준편차")]
+
+    stats = [stat_mean, stat_var, stat_std]
+    for stat in stats:
+        df.drop(stat, axis=1, inplace=True)
+
+    return df
