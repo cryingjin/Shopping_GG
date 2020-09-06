@@ -66,8 +66,10 @@ def engineering_DatePrice(df):
     df.loc[df['NEW상품명'].isnull(), 'NEW상품명'] = df.loc[df['NEW상품명'].isnull(), '상품명']
     
     ## [공휴일여부]
-    print('연도입력')
-    year = input()
+    if df.shape[0] > 30000:
+        year = 2019
+    else:
+        year = 2020
     holidays = getHoliday(year)
     df = df.merge(holidays[['locdate', 'isHoliday']], left_on = df['방송일시'].dt.date.astype(str), right_on = 'locdate', how = 'left').drop('locdate', axis = 1)
     df['isHoliday'] = df['isHoliday'].apply(lambda x : 1 if x == 'Y' else 0)
@@ -149,7 +151,7 @@ def engineering_trendnorder(df):
             log_z = 0
 
         df.loc[(df['상품군'] == cate) & (df['방송날짜'] == date), 'log최근3개월상품군추세'] = log_z
-    
+    df['log최근3개월상품군추세'] = df['log최근3개월상품군추세'].astype(float)
     
     sale['방송월'] = sale['방송일시'].dt.month
     sale['방송시간(시간)'] = sale['방송일시'].dt.hour
