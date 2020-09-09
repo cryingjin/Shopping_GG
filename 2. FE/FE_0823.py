@@ -91,7 +91,7 @@ def engineering_DatePrice(df):
                                           ('오전' if 10 <= x <= 12 else
                                            ( '오후' if 13 <= x <= 18 else
                                             ('저녁' if 19 <= x <= 22 else
-                                             ('밤' if 23 <= x < 3 else x)
+                                             ('밤' if 23 <= x or x < 3 else x)
                                             ))))
     
     ## [계절] (봄(3~5), 여름6~8), 가을(9~11), 겨울(12~2))
@@ -159,21 +159,51 @@ def engineering_trendnorder(df):
     sale['판매량'] = sale['취급액'] / sale['판매단가']
     sale['판매량'] = sale['판매량'].fillna(0).apply(lambda x : math.ceil(x))
     
-    # 월별 상품군 판매량
-    temp = pd.pivot_table(sale, index = '상품군', columns = '방송월', values = '판매량', aggfunc = np.sum).T.reset_index()
-    temp.columns = [temp.columns[0]] + list(map(lambda x : '월별판매랑_' + x, temp.columns[1:]))
-    df = df.merge(temp, on = '방송월', how = 'left')
+#     # 월별 상품군 판매량
+#     temp = pd.pivot_table(sale, index = '상품군', columns = '방송월', values = '판매량', aggfunc = np.sum).T.reset_index()
+#     temp.columns = [temp.columns[0]] + list(map(lambda x : '월별판매랑_' + x, temp.columns[1:]))
+#     df = df.merge(temp, on = '방송월', how = 'left')
     
+#     # 시간대별 상품군 판매량
+#     temp = pd.pivot_table(sale, index = '상품군', columns = '방송시간(시간)', values = '판매량', aggfunc = np.sum).T.reset_index()
+#     temp.columns = [temp.columns[0]] + list(map(lambda x : '시간대별판매랑_' + x, temp.columns[1:]))
+#     df = df.merge(temp, on = '방송시간(시간)', how = 'left')
+    
+#     # 시간별 상품군 판매량
+#     temp = pd.pivot_table(sale, index = '상품군', columns = '방송시간(분)', values = '판매량', aggfunc = np.mean).T.reset_index()
+#     temp.columns = [temp.columns[0]] + list(map(lambda x : '시간별판매랑_' + x, temp.columns[1:]))
+#     df = df.merge(temp, on = '방송시간(분)', how = 'left')
+    
+    # 월별 상품군 판매량
+    temp = pd.pivot_table(sale, index = '상품군', columns = '방송월', values = '판매량', aggfunc = np.mean).T.reset_index()
+    temp.columns = [temp.columns[0]] + list(map(lambda x :  x, temp.columns[1:]))
+    df['상품군별월별평균판매량'] = None
+    for i in range(1, 13):
+        for cate in df['상품군'].unique():
+            df.loc[(df['방송월'] == i) & (df['상품군'] == cate), '상품군별월별평균판매량'] = temp[cate].loc[temp['방송월'] == i].values[0]
+
     # 시간대별 상품군 판매량
-    temp = pd.pivot_table(sale, index = '상품군', columns = '방송시간(시간)', values = '판매량', aggfunc = np.sum).T.reset_index()
-    temp.columns = [temp.columns[0]] + list(map(lambda x : '시간대별판매랑_' + x, temp.columns[1:]))
-    df = df.merge(temp, on = '방송시간(시간)', how = 'left')
+    temp = pd.pivot_table(sale, index = '상품군', columns = '방송시간(시간)', values = '판매량', aggfunc = np.mean).T.reset_index()
+    temp.columns = [temp.columns[0]] + list(map(lambda x : x, temp.columns[1:]))
+    df['상품군별시간대별평균판매량'] = None
+    for i in range(24):
+        for cate in df['상품군'].unique():
+            try:
+                df.loc[(df['방송시간(시간)'] == i) & (df['상품군'] == cate), '상품군별시간대별평균판매량'] = temp[cate].loc[temp['방송시간(시간)'] == i].values[0]
+            except:
+                continue
     
     # 시간별 상품군 판매량
     temp = pd.pivot_table(sale, index = '상품군', columns = '방송시간(분)', values = '판매량', aggfunc = np.mean).T.reset_index()
-    temp.columns = [temp.columns[0]] + list(map(lambda x : '시간별판매랑_' + x, temp.columns[1:]))
-    df = df.merge(temp, on = '방송시간(분)', how = 'left')
-    
+    temp.columns = [temp.columns[0]] + list(map(lambda x : x, temp.columns[1:]))
+    sale['상품군별시간분별평균판매량'] = None
+    for i in df['방송시간(분)'].unique():
+        for cate in df['상품군'].unique():
+            try:
+                df.loc[(df['방송시간(분)'] == i) & (df['상품군'] == cate), '상품군별시간분별평균판매량'] = temp[cate].loc[temp['방송시간(분)'] == i].values[0]
+            except:
+                continue
+    df[['상품군별월별평균판매량', '상품군별시간대별평균판매량', '상품군별시간분별평균판매량']] = df[['상품군별월별평균판매량', '상품군별시간대별평균판매량', '상품군별시간분별평균판매량']].astype(float)
     # 할인율
     rt = pd.read_csv(os.path.join('..', '..', '0.Data', '01_제공데이터', 'prep_discountRt.csv'), encoding = 'cp949')
     df['할인율'] = rt.values
