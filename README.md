@@ -14,3 +14,7 @@
 4. JR한 vector는 lstm 통과보다 Dense통과가 좋다
 5. AutoKeras는 넘모 오려걸리고 기본 Dense만 하고있네...흥
 
+# 09/07 ISSUE
+1. embedding에는 linear, numeric data에는 relu, JR후에는 selu,relu 좋음
+  numeric에 swish, embedding에 selu합치면 loss nan값
+2. 학습중에 val loss는 2.7까지 내려가는데 MAPE 결과를 확인하면 90~100 왜그러지
