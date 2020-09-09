@@ -9,6 +9,7 @@
 |09.03|lgbm + xgb|FE, 앙상블 쪼끔..|[0902_Ensemble.ipynb](https://github.com/cryingjin/Shopping_GG/blob/jbeen2/Modeling/0902_Ensemble.ipynb)|
 |09.05|lgbm|TimeSeriesSplit CV + Bayesian Opt|[0905_ParamTuning.ipynb](https://github.com/cryingjin/Shopping_GG/blob/jbeen2/Modeling/0905_ParamTuning.ipynb)|
 |09.07|lgbm + xgb|앙상블.. |[0906_Ensemble2.ipynb](https://github.com/cryingjin/Shopping_GG/blob/jbeen2/Modeling/0906_Ensemble2.ipynb)|
+|09.07|lgbm|Time & Month CV|[0907_CV.ipynb](https://github.com/cryingjin/Shopping_GG/blob/jbeen2/Modeling/0907_CV.ipynb)|
 
 
 .
@@ -21,8 +22,6 @@
 :star2: [val] 44.5 / [test] 45.5           
 
 
-:heavy_check_mark: 언넝 CV를 다시 짜보자 ... 파라미터 튜닝과 앙상블 만으로는 성능을 낮추기에 무리인 것 같당                    
-
-
-:heavy_check_mark: MAPE 28 어케 찍지 :sweat::question: (젤 낮은 달 36까지는 찍어봤다..)               
+:heavy_check_mark: 랜덤이 답인것 같당 ..                     
+             
 
