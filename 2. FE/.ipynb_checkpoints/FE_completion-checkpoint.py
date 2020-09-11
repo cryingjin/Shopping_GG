@@ -55,7 +55,7 @@ data = data.merge(df_dust, left_on = ['방송월', '방송일', '방송시간(�
 print('Complete edternal Feature enginnering!')
 
 print('Data preprocessing.....')
-categorys = ['결제방법', '상품군_가격대', '전체_가격대', '상품군', '방송시간(시간)', '성별']
+categorys = ['결제방법', '상품군_가격대', '전체_가격대', '상품군', '방송시간(시간)', '방송시간(분)', '성별']
 drop_columns = ['방송일시','마더코드', '상품코드', '상품명', 'NEW상품코드', 'NEW상품명', '단위', '브랜드', '취급액', '상품코드', '옵션', '종류', '년도', '상품명다시', '방송날짜']
 data[categorys] = data[categorys].astype(str)
     

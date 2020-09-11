@@ -46,11 +46,11 @@ def engineering_TimeDiff(df) :
 
 def engineering_DatePrice(df):
     # 데이터 로드
-    item = pd.read_excel(os.path.join('..', '..','0.Data', '01_제공데이터', 'item_meta_v03_0823.xlsx'))
+    item = pd.read_excel(os.path.join('..', '..','0.Data', '01_제공데이터', 'item_meta_v04_0828.xlsx'))
     data = joblib.load(os.path.join('..', '..','0.Data', '01_제공데이터', '0823_prep4data.pkl'))
     itemcategory = data['itemcategory']
     mothercode = data['mothercode']
-    brand = data['brand']
+#     brand = data['brand']
     
     # 공휴일여부
     key = '8wBiTSHPiK2z%2By8ETu%2FpYv%2FMAAdZoR8rZg3PIvSNCcD%2F26BiBPaosFs2dzrVJ%2BHUeaQGWb9c3T4vvNgMpI7fdw%3D%3D'
@@ -116,7 +116,7 @@ def engineering_DatePrice(df):
     df = df.merge(mothercode, on = '마더코드', how = 'left')
     
     ## [브랜드]별 가격 summary
-    df = df.merge(brand, on = ['브랜드', '상품군'], how = 'left')
+#     df = df.merge(brand, on = ['브랜드', '상품군'], how = 'left')
     
     ## [NEW아이템]별 가격 summary + [상품군] 별 가격대, 전체 가격대
     df = df.merge(item, on = ['NEW상품코드', 'NEW상품명', '상품군'], how = 'left')
@@ -220,7 +220,7 @@ def engineering_zscore(df):
             return (price - mean) / std
 
     df["상품군_zscore"] = df.apply(lambda x: zscore(x["판매단가"], x["상품군_평균판매단가"], x["상품군_표준편차"]), axis=1)
-    df["상품군&브랜드_zscore"] = df.apply(lambda x: zscore(x["판매단가"], x["상품군&브랜드_평균판매단가"], x["상품군&브랜드_표준편차"]), axis=1)
+#     df["상품군&브랜드_zscore"] = df.apply(lambda x: zscore(x["판매단가"], x["상품군&브랜드_평균판매단가"], x["상품군&브랜드_표준편차"]), axis=1)
     df["마더코드_zscore"] = df.apply(lambda x: zscore(x["판매단가"], x["마더코드_평균판매단가"], x["마더코드_표준편차"]), axis=1)
     df["NEW_zscore"] = df.apply(lambda x: zscore(x["판매단가"], x["NEW_평균판매단가"], x["NEW_표준편차"]), axis=1)
 
