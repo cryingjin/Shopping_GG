@@ -31,6 +31,28 @@ sale = FE.engineering_trendnorder(sale)
 sale = FE.engineering_zscore(sale)
 print('Complete Feature enginnering!')
 
+# 시계열 FE
+print('Time Feature enginnering.....')
+timeFE = ['ema_s', 'ema_m', 'ema_l', 'macd', 'sig', 'rol14', 'rol30']
+timeS = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '전처리', 'prep_2019_pb_timeseries.csv'), encoding = 'cp949')
+timeS['방송일'] = pd.to_datetime(timeS['방송일'])
+
+temp = pd.DataFrame(columns = timeFE)
+sale = pd.concat([sale, temp], axis = 1)
+sale['방송날'] = sale['방송일시'].dt.date
+sale['방송날'] = pd.to_datetime(sale['방송날'])
+
+for dt, cate in sale[['방송날', '상품군']].drop_duplicates().values:
+    try:
+        sale.loc[(sale['방송날'] == dt) & (sale['상품군'] == cate), ['ema_s', 'ema_m', 'ema_l', 'macd', 'sig', 'rol14', 'rol30']] = timeS.loc[timeS['방송일'] == dt, timeS.columns[timeS.columns.str.contains(cate)]].values
+    except:
+        continue
+sale = sale.drop('방송날', axis = 1)
+sale[timeFE] = sale[timeFE].astype(float)
+
+
+
+
 # 임베딩데이터 FE
 print('emb Feature enginnering.....')
 emb = pd.read_excel(os.path.join('..', '..', '0.Data', '04_임베딩데이터', f'{args.embedding}.xlsx'), index_col = 0)
@@ -70,11 +92,11 @@ data = data.drop(drop_columns, axis = 1)
 
 today = datetime.today().strftime('%Y%m%d%H%M')
 
-# joblib.dump({
-#     'X' : data,
-#     'y' : y
-# }, os.path.join('..', '..', '0.Data', '05_분석데이터', 'Thd_FE_{}_before.pkl').format(today))
-# print('Data saved!')
+joblib.dump({
+    'X' : data,
+    'y' : y
+}, os.path.join('..', '..', '0.Data', '05_분석데이터', '5th_FE_{}_before.pkl').format(today))
+print('Data saved!')
 
 X = pd.get_dummies(data)
 print('Complete Data preprocessing!')
@@ -83,5 +105,5 @@ print('Data saving.....')
 joblib.dump({
     'X' : X,
     'y' : y
-}, os.path.join('..', '..', '0.Data', '05_분석데이터', '4th_FE2_{}.pkl').format(today))
+}, os.path.join('..', '..', '0.Data', '05_분석데이터', '5th_FE_{}.pkl').format(today))
 print('Data saved!')

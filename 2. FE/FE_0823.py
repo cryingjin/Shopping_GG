@@ -32,8 +32,7 @@ def engineering_TimeDiff(df) :
     # [상품 및 브랜드 총 판매 횟수 ] 동일 상품 / 브랜드 총 방송횟수
     df = df.merge(df.groupby('NEW상품명')['방송일'].nunique().reset_index().rename(columns = {'방송일' : '상품방송횟수'}), on = 'NEW상품명', how = 'left')
     
-    df = df.merge(df.groupby('브랜드')['방송일'].nunique().reset_index().rename(columns = {'방송일' : '브랜드방송횟수'}), on = '브랜드', how = 'left')
-    
+    df = df.merge(df.groupby('브랜드')['방송일'].nunique().reset_index().rename(columns = {'방송일' : '브랜드방송횟수'}), on = '브랜드', how = 'left') 
     df = df.drop('방송일', axis = 1)
     
     # [조기매진] (20분 이하 혹은 20분과 30분 사이에 조기 종료된 프로그램 선별)
@@ -119,6 +118,7 @@ def engineering_DatePrice(df):
 #     df = df.merge(brand, on = ['브랜드', '상품군'], how = 'left')
     
     ## [NEW아이템]별 가격 summary + [상품군] 별 가격대, 전체 가격대
+    item = item.drop(['상품명다시', '브랜드', '단위'], axis = 1)
     df = df.merge(item, on = ['NEW상품코드', 'NEW상품명', '상품군'], how = 'left')
     
     ## [상품군] 평균 판매단가 - 해당 상품 판매단가
@@ -143,6 +143,8 @@ def engineering_trendnorder(df):
     df['방송날짜'] = df['방송일시'].dt.date
     df['방송날짜'] = pd.to_datetime(df['방송날짜'])
     for cate, date in df[['상품군', '방송날짜']].drop_duplicates().values:
+        if cate == '무형':
+            continue
         log_y = np.log(list(temp.loc[(temp['상품군'] == cate) & (temp['방송날짜'] < date) & (date - timedelta(days = 90) < temp['방송날짜']), '취급액'] + 1))
         log_x = np.arange(len(log_y))
         try:
