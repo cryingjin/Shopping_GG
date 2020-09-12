@@ -6,14 +6,15 @@
 |corpus_ours|list|[download link](https://drive.google.com/file/d/1SdiuAOdOgHCuuYHPKkGWq3M5W406B-2N/view?usp=sharing)|
 
 ## Model
-|model|cv별 모델초기화|EPCOH|Link|
-|:---:|:---|:---|:---|
-|MLP&CNN-MLP|O|500|[link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb)|
-|LSTM&CNN-MLP|O|파일 어디갔지..?|learning...|
-|LSTM&CNN-MLP|X|5000|learning...|
-|MultiLSTM&CNN-MLP|O|5000|learning...|
-|MultiLSTM&CNN-MLP|X|500|learning...|
-|MultiLSTM&CNN-MLP|X|5000|learning...|
+|model|Result(val loss)|Link|
+|:---:|:---|:---|
+|MLP&CNN-MLP|4|[link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb)|
+|LSTM&CNN-MLP| |[link]([link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb)|
+|MultiLSTM&CNN-MLP|4|[link]([link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb))|
+
+## 09/11 ISSUE
+1. Colab에서는 메모리가 터짐
+2. 로컬에서는 loss가 nan. y_pred = 0으로 찍힘
 
 
 ## 09/09 ISSUE
