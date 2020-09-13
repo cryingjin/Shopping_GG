@@ -24,7 +24,7 @@
 |09.05|lgbm|TimeSeriesSplit CV + Bayesian Opt|[0905_ParamTuning.ipynb](https://github.com/cryingjin/Shopping_GG/blob/jbeen2/Modeling/0905_ParamTuning.ipynb)|
 |09.07|lgbm + xgb|앙상블.. |[0906_Ensemble2.ipynb](https://github.com/cryingjin/Shopping_GG/blob/jbeen2/Modeling/0906_Ensemble2.ipynb)|
 |09.07|lgbm|Time & Month CV|[0907_CV.ipynb](https://github.com/cryingjin/Shopping_GG/blob/jbeen2/Modeling/0907_CV.ipynb)|
-|09.12|lgbm|CV5, optuna, SHAP|[0912_Tuning1.ipynb](https://github.com/cryingjin/Shopping_GG/blob/jbeen2/0912_Tuning1.ipynb)|
+|09.12|lgbm|CV5, optuna, SHAP|[0912_Tuning1.ipynb](https://github.com/cryingjin/Shopping_GG/blob/jbeen2/Modeling/0912_Tuning1.ipynb)|
 
 
 .
