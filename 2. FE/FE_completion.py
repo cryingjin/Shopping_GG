@@ -50,9 +50,6 @@ for dt, cate in sale[['방송날', '상품군']].drop_duplicates().values:
 sale = sale.drop('방송날', axis = 1)
 sale[timeFE] = sale[timeFE].astype(float)
 
-
-
-
 # 임베딩데이터 FE
 print('emb Feature enginnering.....')
 emb = pd.read_excel(os.path.join('..', '..', '0.Data', '04_임베딩데이터', f'{args.embedding}.xlsx'), index_col = 0)
