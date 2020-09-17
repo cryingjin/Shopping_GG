@@ -8,11 +8,12 @@ import pandas as pd
 def preprocessing_ext_weather(df):
     df = df.loc[df['지점명'].str.contains('인천|울산|대구|대전|수원|부산|광주|서울')]
     df = df.rename(columns = {'수원' : '경기'})
+    df = df.reset_index(drop = True)
     
     # 변수 정리
     df = df[list(df.columns[(df.isnull().sum() / df.shape[0]) < 0.5]) + ['강수량(mm)']]
-    df = df.drop(['지점', '풍향(16방위)', '증기압(hPa)', '이슬점온도(°C)', '현지기압(hPa)', '해면기압(hPa)',
-                  '일조(hr)', '일조 QC플래그', '전운량(10분위)', '중하층운량(10분위)', '최저운고(100m )', '운형(운형약어)'], axis = 1)
+    df = df.drop(['풍향(16방위)', '증기압(hPa)', '이슬점온도(°C)', '현지기압(hPa)', '해면기압(hPa)',
+                  '일조(hr)', '전운량(10분위)', '중하층운량(10분위)', '최저운고(100m )', '운형(운형약어)'], axis = 1)
     
     
     # 체감온도 : 13.12 + 0.6215T - 11.37V^0.16 + 0.3965V^0.16T (T : 기온(°C), V : 풍속(km/h))
@@ -49,6 +50,72 @@ def preprocessing_ext_dust(df):
     df['월'] = df['일시'].dt.month
     df['일'] = df['일시'].dt.day
     df['시간'] = df['일시'].dt.hour
+    
+    return df
+
+
+def preprocessing_economy():
+    df1 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '소매업태별 판매액지수.xlsx'))
+    df2 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '소비자동향조사 전국.xlsx'))
+    df3 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '온라인쇼핑몰 판매매체별 상품군별거래액.xlsx'))
+    df4 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '지역별 소비유형별 개인 신용카드.xlsx'))
+    
+    # df1 정제
+    df1['업태별'] = df1['업태별'].apply(lambda x : x.strip())
+    df1.columns = ['업태별'] + list(map(lambda x : x.replace(' ','')[:7], df1.columns[1:]))
+    
+    t = df1.loc[[0,19]].T.drop('업태별').reset_index()
+    t = t.loc[t[19] != '-']
+    t[19] = t[19].astype(float)
+    df1 = pd.pivot_table(t, index = 'index', columns = 0, values = 19)
+    df1.columns = ['경상지수', '불변지수']
+    df1.index.name = None
+    
+    # df2 정제
+    selected = ['현재생활형편CSI',
+                '현재경기판단CSI',
+                '생활형편전망CSI',
+                '소비지출전망CSI',
+                '주택가격전망CSI',
+                '임금수준전망CSI',
+                '소비자심리지수']
+    
+    df2 = df2.loc[df2['분류코드별'] == '전체'].reset_index(drop = True)
+    df2.index = df2['지수코드별']
+    df2 = df2.T.drop(['지수코드별', '분류코드별'])
+    df2.columns = list(map(lambda x : x.strip(), df2.columns))
+    df2 = df2[selected]
+    
+    # df3 정제
+    df3 = df3.loc[df3['판매매체별'] == '계'].T
+    df3.columns = df3.loc['상품군별']
+    df3 = df3.drop(['상품군별', '판매매체별'])
+    df3.index= list(map(lambda x : x.replace(' ', '')[:7], df3.index))
+    
+    # df4 정제
+    regional_consumed = pd.pivot_table(df4, index = 'TIME', columns = 'ITEM_NAME1', values = 'DATA_VALUE')
+    categorical_consumed = pd.pivot_table(df4, index = 'TIME', columns = 'ITEM_NAME2', values = 'DATA_VALUE')
+    categorical_consumed.index.name = None; regional_consumed.index.name = None
+    
+    
+    def makeDate(df):
+        df = df.reset_index().rename(columns = {'index' : '날짜'})
+        if type(df['날짜'][0]) == str:
+            df['날짜'] = pd.to_datetime(df['날짜'])
+        else:
+            df['날짜'] = df['날짜'].astype(str).apply(lambda x : '-'.join((x[:4],x[4:])))
+            df['날짜'] = pd.to_datetime(df['날짜'])
+        return df
+    df1 = makeDate(df1)
+    df2 = makeDate(df2)
+    df3 = makeDate(df3)
+    df4_a = makeDate(regional_consumed)
+    df4_b = makeDate(categorical_consumed)
+    
+    df = df1.merge(df2, on = '날짜', how = 'outer').merge(df3, on = '날짜', how = 'outer').merge(df4_a, on = '날짜', how = 'outer').merge(df4_b, on = '날짜', how = 'outer')
+    
+    df['년도'] = df['날짜'].dt.year
+    df['월'] = df['날짜'].dt.month
     
     return df
 
