@@ -12,6 +12,11 @@
 |LSTM&CNN-MLP| |[link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb)|
 |MultiLSTM&CNN-MLP|4|[link]([link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb))|
 
+## 0917
+#### batch_size = 128, epoch = 500 earlystopping = 20 val_loss = 129.04905279477438(망한거)
+![image](https://user-images.githubusercontent.com/41895063/93476771-1dfe2800-f935-11ea-944d-b53a781d5bda.png)
+
+
 ## 09/17 ISSUE
 1. Scaling안하고 해야겠다
 2. MLP&CNN보다는 LSTM&CNN이 좋다
