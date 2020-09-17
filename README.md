@@ -12,6 +12,10 @@
 |LSTM&CNN-MLP| |[link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb)|
 |MultiLSTM&CNN-MLP|4|[link]([link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb))|
 
+## 09/17 ISSUE
+1. Scaling안하고 해야겠다
+2. MLP&CNN보다는 LSTM&CNN이 좋다
+
 ## 09/11 ISSUE
 1. Colab에서는 메모리가 터짐 -> feature줄이고 층도 얕게 해서 다시 시도
 2. 로컬에서는 loss가 nan. y_pred = 0으로 찍힘
