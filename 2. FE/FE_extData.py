@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 
-def preprocessing_ext_weather(df):
+def preprocessing_weather(df):
     df = df.loc[df['지점명'].str.contains('인천|울산|대구|대전|수원|부산|광주|서울')]
     df = df.rename(columns = {'수원' : '경기'})
     df = df.reset_index(drop = True)
@@ -29,7 +29,7 @@ def preprocessing_ext_weather(df):
     return df
 
 
-def preprocessing_ext_dust(df):
+def preprocessing_dust(df):
     df = df.loc[df['지역'].str.contains('서울|경기|인천|부산|울산|대구|대전|광주')]
     df['지역'] = df['지역'].apply(lambda x : x[:2])
     
@@ -114,7 +114,7 @@ def preprocessing_economy():
     
     df = df1.merge(df2, on = '날짜', how = 'outer').merge(df3, on = '날짜', how = 'outer').merge(df4_a, on = '날짜', how = 'outer').merge(df4_b, on = '날짜', how = 'outer')
     
-    df['년도'] = df['날짜'].dt.year
+    df['연도'] = df['날짜'].dt.year
     df['월'] = df['날짜'].dt.month
     
     return df
