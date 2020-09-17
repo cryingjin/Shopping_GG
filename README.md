@@ -12,6 +12,9 @@
 |:---:|:---|:---|:---|  
 |0906|0906_ML_embedded_data_yj.ipynb|임베딩 피쳐 ver4 with lgbm||  
 |0907|0907_ML_basic_catboost_yj.ipynb|basic ml model & catboost||
+|0912|0912_ML_baysian_ver3_yj.ipynb|tunning with baysian search|predict 값 저장|
+|0917|0917_ML_gridsearch_ver4_yj.ipynb|basic ml tunning with grid search|predict 값 저장|| 
+* 5th_FE_ver4   
 
 ## CrossValidation
 |Date|Model|Comment|ETC|
