@@ -14,9 +14,9 @@ def engineering_data(df):
     # 수작업 데이터 불러오기 (2019 제공데이터를 가지고 수작업 한 파일)
     meta = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', '수작업_meta.xlsx'))
     
-    df = df.merge(meta[['상품코드', 'NEW상품명', '브랜드', '상품명다시', '단위', '모델명', '성별', 'NS카테고리']], on = '상품코드', how = 'left')
+    df = df.merge(meta[['상품코드', 'NEW상품명', '브랜드', '결제방법', '상품명다시', '단위', '모델명', '성별', 'NS카테고리']], on = '상품코드', how = 'left')
     
-    item = meta['NEW상품명'].drop_duplicates().reset_index(drop = True).reset_index().rename(columns = {'index' : 'NEW상품코드'})
+    item = meta[['NEW상품명', '상품군']].drop_duplicates().reset_index(drop = True).reset_index().rename(columns = {'index' : 'NEW상품코드'})
     
     # 집계 데이터프레임 칼럼 정리
     def prepColumn(df):
@@ -30,7 +30,7 @@ def engineering_data(df):
         return df
     
     # NEW상품명 기준 집계 데이터프레임 생성
-    temp = df.groupby('NEW상품명').agg({
+    temp = meta.groupby('NEW상품명').agg({
         '판매단가' : [('NEW_최고판매단가', np.max),
                  ('NEW_최저판매단가', np.min),
                   ('NEW_평균판매단가', np.mean),
@@ -44,9 +44,15 @@ def engineering_data(df):
     
     item = item.merge(temp, on = 'NEW상품명', how = 'left')
     
+    # 가격대 [전체_가격대]
+    item['전체_가격대'] = item['NEW_최고판매단가'].apply(lambda x : '저가' if x <= 59000 else ('중저가' if 59000 < x <= 109900 else ('고가' if 109900 < x < 509000 else '초고가')))
+    
+    # 상품군 내 가격대 [상품군_가격대]
+    for c in item['상품군'].unique():
+        item.loc[item['상품군'] == c, '상품군_가격대'] = pd.qcut(item.loc[item['상품군'] == c, 'NEW_최고판매단가'], q = 3, labels = False)
     
     # 마더코드 기준 집계 데이터프레임 생성
-    mothercode = df.groupby('마더코드').agg({
+    mothercode = meta.groupby('마더코드').agg({
         '판매단가' : [('마더코드_최고판매단가', np.max),
                  ('마더코드_최저판매단가', np.min),
                   ('마더코드_평균판매단가', np.mean),
@@ -69,7 +75,8 @@ def engineering_data(df):
                  ]
     }).reset_index()
     itemcategory = prepColumn(itemcategory)
-    
+    print(df.columns)
+    print(itemcategory.columns)
     
     # NEW아이템 가격 집계 merge
     df = df.merge(item, on = 'NEW상품명', how = 'left')
@@ -207,19 +214,19 @@ def engineering_DatePrice(df, dataset):
 def engineering_order(df):
     # 방송날짜별 상품군별 취급액 계산
 #     sale = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'sale_data_v05_0828.xlsx'))
-    sale['방송날'] = df['방송일시'].dt.date
-    temp = sale.groupby(['상품군', '방송날'])['취급액'].sum().reset_index()
-    temp['방송날'] = pd.to_datetime(temp['방송날'])
+    df['방송날'] = df['방송일시'].dt.date
+#     temp = df.groupby(['상품군', '방송날'])['취급액'].sum().reset_index()
+#     temp['방송날'] = pd.to_datetime(temp['방송날'])
     
-    sale['방송년도'] = sale['방송일시'].dt.year
-    sale['방송월'] = sale['방송일시'].dt.month
-    sale['방송시간(시간)'] = sale['방송일시'].dt.hour
-    sale['방송시간(분)'] = sale['방송일시'].dt.minute
-    sale['판매량'] = sale['취급액'] / sale['판매단가']
-    sale['판매량'] = sale['판매량'].fillna(0).apply(lambda x : math.ceil(x))
+    df['방송년도'] = df['방송일시'].dt.year
+    df['방송월'] = df['방송일시'].dt.month
+    df['방송시간(시간)'] = df['방송일시'].dt.hour
+    df['방송시간(분)'] = df['방송일시'].dt.minute
+    df['판매량'] = df['취급액'] / df['판매단가']
+    df['판매량'] = df['판매량'].fillna(0).apply(lambda x : math.ceil(x))
     
     # 월별 상품군 판매량
-    temp = pd.pivot_table(sale, index = '상품군', columns = '방송월', values = '판매량', aggfunc = np.mean).T.reset_index()
+    temp = pd.pivot_table(df, index = '상품군', columns = '방송월', values = '판매량', aggfunc = np.mean).T.reset_index()
     temp.columns = [temp.columns[0]] + list(map(lambda x :  x, temp.columns[1:]))
     df['상품군별월별평균판매량'] = None
     for i in range(1, 13):
@@ -227,7 +234,7 @@ def engineering_order(df):
             df.loc[(df['방송월'] == i) & (df['상품군'] == cate), '상품군별월별평균판매량'] = temp[cate].loc[temp['방송월'] == i].values[0]
 
     # 시간대별(시각) 상품군 판매량
-    temp = pd.pivot_table(sale, index = '상품군', columns = '방송시간(시간)', values = '판매량', aggfunc = np.mean).T.reset_index()
+    temp = pd.pivot_table(df, index = '상품군', columns = '방송시간(시간)', values = '판매량', aggfunc = np.mean).T.reset_index()
     temp.columns = [temp.columns[0]] + list(map(lambda x : x, temp.columns[1:]))
     df['상품군별시간대별평균판매량'] = None
     for i in range(24):
@@ -238,9 +245,9 @@ def engineering_order(df):
                 continue
     
     # 시간별(분) 상품군 판매량
-    temp = pd.pivot_table(sale, index = '상품군', columns = '방송시간(분)', values = '판매량', aggfunc = np.mean).T.reset_index()
+    temp = pd.pivot_table(df, index = '상품군', columns = '방송시간(분)', values = '판매량', aggfunc = np.mean).T.reset_index()
     temp.columns = [temp.columns[0]] + list(map(lambda x : x, temp.columns[1:]))
-    sale['상품군별시간분별평균판매량'] = None
+    df['상품군별시간분별평균판매량'] = None
     for i in df['방송시간(분)'].unique():
         for cate in df['상품군'].unique():
             try:

@@ -2,6 +2,7 @@
 
 import os
 import sys
+import gc
 import joblib
 import FE_innData as FEin
 import FE_extData as FEex
@@ -16,14 +17,14 @@ parser.add_argument('--embedding', required = True)
 parser.add_argument('--dataset', required = True)
 args = parser.parse_args()
 
-print('start Feature Engineering.....')
+print('========== Start Feature Engineering ==========')
 # 본 데이터 불러오기
-print('Data Load.....')
+print(f'{args.dataset} Data Load.....')
 
 if args.dataset == 'train':
-    sale = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', '2020 빅콘테스트 데이터분석분야-챔피언리그_2019년 실적데이터_v1_200818.xlsx'))
+    sale = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', '2020 빅콘테스트 데이터분석분야-챔피언리그_2019년 실적데이터_v1_200818.xlsx'), skiprows = 1)
 elif args.dataset == 'test':
-    sale = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', '2020 빅콘테스트 데이터분석분야-챔피언리그_2020년 6월 판매실적예측데이터(평가데이터).xlsx'))
+    sale = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', '2020 빅콘테스트 데이터분석분야-챔피언리그_2020년 6월 판매실적예측데이터(평가데이터).xlsx'), skiprows = 1)
 else:
     print('dataset error.....')
 
@@ -44,15 +45,19 @@ sale = FEin.engineering_timeSeries(sale)
 print('emb Feature enginnering.....')
 emb = pd.read_excel(os.path.join('..', '..', '0.Data', '04_임베딩데이터', f'{args.embedding}.xlsx'), index_col = 0)
 sale = sale.merge(emb.drop_duplicates(), on = 'NEW상품명', how = 'left')
-print('Complete emb Feature enginnering!')
+
+del emb
+gc.collect()
+
+# print('Complete emb Feature enginnering!')
 
 ############## 외부 데이터 FE ##############
 print('external Feature enginnering.....')
 print('external Data Load.....')
 
 # 날씨 데이터 FE
-w_19 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '전처리', '2019_weather.csv'))
-w_20 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '전처리', '2020_weather.csv'))
+w_19 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '2019_weather.csv'), encoding = 'cp949', dtype='unicode')
+w_20 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '2020_weather.csv'), encoding = 'cp949', dtype='unicode')
 df_wth = pd.concat([w_19, w_20], axis = 0)
 df_wth = FEex.preprocessing_weather(df_wth)
 
@@ -65,21 +70,19 @@ df_dust = FEex.preprocessing_dust(df_dust)
 # 경제 데이터 FE
 df_eco = FEex.preprocessing_economy()
 
-from sklearn.decomposition import PCA
-pca = PCA(n_components = 0.9)
-X = pca.fit_transform(df_eco.iloc[:,35:])
-df_eco = pd.concat([df_eco.iloc[:,:35], pd.DataFrame(X, columns = ['pca_1',  'pca_2'])], axis = 1)
-
 # 외부 데이터 merge
-data = sale.merge(df_eco, left_on = ['방송년도', '방송월'], right_on = ['연도', '월'], how = 'left').drop(['날짜', '월'], axis = 1)
+data = sale.merge(df_eco, left_on = ['방송년도', '방송월'], right_on = ['연도', '월'], how = 'left').drop(['연도', '월'], axis = 1)
 
-data = data.merge(df_wth, left_on = ['방송년도', '방송월', '방송일', '방송시간(시간)'], right_on = ['연도', '월', '일' ,'시간'], how = 'left').drop(['날짜', '월', '일', '시간'], axis = 1)
+del sale
+gc.collect()
 
-data = data.merge(df_dust, left_on = ['방송년도', '방송월', '방송일', '방송시간(시간)'], right_on = ['연도', '월', '일', '시간'], how ='left').drop(['날짜', '월', '일', '시간'], axis = 1)
+data = data.merge(df_wth, left_on = ['방송년도', '방송월', '방송일', '방송시간(시간)'], right_on = ['연도', '월', '일' ,'시간'], how = 'left').drop(['연도', '월', '일', '시간'], axis = 1)
+
+data = data.merge(df_dust, left_on = ['방송년도', '방송월', '방송일', '방송시간(시간)'], right_on = ['연도', '월', '일', '시간'], how ='left').drop(['연도', '월', '일', '시간'], axis = 1)
 print('Complete external Feature enginnering!')
 
 ############## 데이터 Preprocessing ##############
-print('Start Data preprocessing.....')
+print('========== Start Data preprocessing ==========')
 categorys = ['결제방법', '상품군_가격대', '전체_가격대', '상품군', '방송시간(시간)', '방송시간(분)', '성별']
 drop_columns = ['방송일시','마더코드', '상품코드', '상품명', 'NEW상품코드', 'NEW상품명', '단위', '브랜드', '취급액', '상품코드', '옵션', '종류', '년도', '상품명다시', '방송날짜']
 data[categorys] = data[categorys].astype(str)
