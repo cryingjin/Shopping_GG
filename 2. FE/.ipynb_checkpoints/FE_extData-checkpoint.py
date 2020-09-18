@@ -5,8 +5,14 @@ import datetime
 import numpy as np
 import pandas as pd
 
+def prepColumns(df):
+    df.columns = list(map(lambda x : '_'.join(x), df.columns))
+    return df
 
 def preprocessing_weather(df):
+    
+    
+    
     df = df.loc[df['지점명'].str.contains('인천|울산|대구|대전|수원|부산|광주|서울')]
     df = df.rename(columns = {'수원' : '경기'})
     df = df.reset_index(drop = True)
@@ -18,24 +24,30 @@ def preprocessing_weather(df):
     
     
     # 체감온도 : 13.12 + 0.6215T - 11.37V^0.16 + 0.3965V^0.16T (T : 기온(°C), V : 풍속(km/h))
-    df.iloc[:, 3:] = df.iloc[:, 3:].astype(float)
+    df.iloc[:, 3:] = df.iloc[:, 3:].fillna(0).astype(float)
     df['체감온도'] = df.apply(lambda x: 13.12 + 0.6215 * x['기온(°C)'] - 11.37 * (x['풍속(m/s)'] * 3.6)**0.16 + 0.3965 * (x['풍속(m/s)'] * 3.6)**0.16 * x['기온(°C)'], axis = 1)
-    
+    df.iloc[:, 3:] = df.iloc[:, 3:].fillna(0).astype(float)
+
+    df = pd.pivot_table(df, index = '일시', columns = '지점명')
+    df = prepColumns(df).reset_index()
     # merge를 위한 날짜 생성 
     df['일시'] = pd.to_datetime(df['일시'])
     df['연도'] = df['일시'].dt.year
     df['월'] = df['일시'].dt.month
     df['일'] = df['일시'].dt.day
     df['시간'] = df['일시'].dt.hour
-    
+    df = df.sort_values('일시')
+    df = df.drop('일시', axis = 1)
     return df
 
 
 def preprocessing_dust(df):
-    df = df.loc[df['지역'].str.contains('서울|경기|인천|부산|울산|대구|대전|광주')]
-    temp = df['지역'].apply(lambda x : x[:2]).values
-    df.loc[:, '지역'] = temp
-    
+    temp = df.loc[df['지역'].str.contains('서울|경기|인천|부산|울산|대구|대전|광주')]
+    del df
+    gc.collect()
+    value = temp['지역'].apply(lambda x : x[:2]).values
+    df = temp.copy()
+    df['지역'] = value
     del temp
     gc.collect()
 
@@ -52,19 +64,23 @@ def preprocessing_dust(df):
     
     del df
     gc.collect()
+    
+    prep_df = pd.pivot_table(prep_df, index = '측정일시', columns = '지역')
+    prep_df = prepColumns(prep_df).reset_index()
+    
     # merge를 위한 날짜 생성
     prep_df['측정일시'] = pd.to_datetime(prep_df['측정일시'])
     prep_df['연도'] = prep_df['측정일시'].dt.year
     prep_df['월'] = prep_df['측정일시'].dt.month
     prep_df['일'] = prep_df['측정일시'].dt.day
     prep_df['시간'] = prep_df['측정일시'].dt.hour
-    
+    prep_df = prep_df.drop('측정일시', axis = 1)
     return prep_df
 
 
 def preprocessing_economy():
     df1 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '소매업태별 판매액지수.xlsx'))
-    df2 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '소비자동향조사 전국.xlsx'))
+    df2 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '소비자동향조사 전국.csv'), encoding = 'cp949')
     df3 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '온라인쇼핑몰 판매매체별 상품군별거래액.xlsx'))
     df4 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '지역별 소비유형별 개인 신용카드.xlsx'))
     
@@ -90,7 +106,7 @@ def preprocessing_economy():
     
     df2 = df2.loc[df2['분류코드별'] == '전체'].reset_index(drop = True)
     df2.index = df2['지수코드별']
-    df2 = df2.T.drop(['지수코드별', '분류코드별'])
+    df2 = df2.T.drop(['지수코드별', '분류코드별', '항목', '단위'])
     df2.columns = list(map(lambda x : x.strip(), df2.columns))
     df2 = df2[selected]
     
@@ -109,10 +125,15 @@ def preprocessing_economy():
     def makeDate(df):
         df = df.reset_index().rename(columns = {'index' : '날짜'})
         if type(df['날짜'][0]) == str:
-            df['날짜'] = pd.to_datetime(df['날짜'])
+            try:
+                df['날짜'] = pd.to_datetime(df['날짜'])
+            except:
+                df['날짜'] = df['날짜'].apply(lambda x : x.replace('월', ''))
+                df['날짜'] = pd.to_datetime(df['날짜'].apply(lambda x : x.replace('월', '')))
         else:
             df['날짜'] = df['날짜'].astype(str).apply(lambda x : '-'.join((x[:4],x[4:])))
             df['날짜'] = pd.to_datetime(df['날짜'])
+            
         return df
     df1 = makeDate(df1)
     df2 = makeDate(df2)
@@ -120,12 +141,14 @@ def preprocessing_economy():
     df4_a = makeDate(regional_consumed)
     df4_b = makeDate(categorical_consumed)
     
-    df = df1.merge(df2, on = '날짜', how = 'outer').merge(df3, on = '날짜', how = 'outer').merge(df4_a, on = '날짜', how = 'outer').merge(df4_b, on = '날짜', how = 'outer')
+    df = df4_a.merge(df4_b, on = '날짜', how = 'left').merge(df3, on = '날짜', how = 'left').merge(df2, on = '날짜', how = 'left').merge(df1, on = '날짜', how = 'left')
+    
+    # 경제지수는 한달 전 수치를 사용하기 위해서
+    from dateutil.relativedelta import relativedelta
+    df['날짜'] = df['날짜'].apply(lambda x: x + relativedelta(months = 1))
     
     df['연도'] = df['날짜'].dt.year
     df['월'] = df['날짜'].dt.month
-    df = df.drop(18)
-    
     
     from sklearn.decomposition import PCA
     pca = PCA(n_components = 5)

@@ -75,11 +75,9 @@ def engineering_data(df):
                  ]
     }).reset_index()
     itemcategory = prepColumn(itemcategory)
-    print(df.columns)
-    print(itemcategory.columns)
     
     # NEW아이템 가격 집계 merge
-    df = df.merge(item, on = 'NEW상품명', how = 'left')
+    df = df.merge(item.drop('상품군', axis = 1), on = 'NEW상품명', how = 'left')
     
     # 상푼군 가격 집계 merge
     df = df.merge(itemcategory, on = '상품군', how = 'left')

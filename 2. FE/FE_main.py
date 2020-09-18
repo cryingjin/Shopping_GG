@@ -84,7 +84,18 @@ print('Complete external Feature enginnering!')
 ############## 데이터 Preprocessing ##############
 print('========== Start Data preprocessing ==========')
 categorys = ['결제방법', '상품군_가격대', '전체_가격대', '상품군', '방송시간(시간)', '방송시간(분)', '성별']
-drop_columns = ['방송일시','마더코드', '상품코드', '상품명', 'NEW상품코드', 'NEW상품명', '단위', '브랜드', '취급액', '상품코드', '옵션', '종류', '년도', '상품명다시', '방송날짜']
+drop_columns = ['방송일시', # 월, 일, 시간, 분으로 표현
+                '마더코드', # 
+                '상품코드', #
+                '상품명', # 임베딩
+                'NEW상품코드', #
+                'NEW상품명', # 임베딩
+                '단위', # 임베딩
+                '브랜드', # 임베딩
+                '취급액', # target
+                '모델명',
+                '상품명다시']
+
 data[categorys] = data[categorys].astype(str)
     
 # 예측 상품 중 판매가 0인 프로그램 실적은 예측에서 제외함 -> 무형 제외
@@ -102,11 +113,11 @@ joblib.dump({
     'X' : data,
     'y' : y
 }, os.path.join('..', '..', '0.Data', '05_분석데이터', '6th_FE_{}_before.pkl').format(today))
-print('Data saved!')
+print('before Data saved!')
 
 X = pd.get_dummies(data)
 print('Complete Data preprocessing!')
-print('Data saving.....')
+print('complete Data saving.....')
 
 joblib.dump({
     'X' : X,
