@@ -9,10 +9,8 @@ def prepColumns(df):
     df.columns = list(map(lambda x : '_'.join(x), df.columns))
     return df
 
+############## 날짜 데이터(출처 : 기상자료개방포털) ##############
 def preprocessing_weather(df):
-    
-    
-    
     df = df.loc[df['지점명'].str.contains('인천|울산|대구|대전|수원|부산|광주|서울')]
     df = df.rename(columns = {'수원' : '경기'})
     df = df.reset_index(drop = True)
@@ -40,7 +38,7 @@ def preprocessing_weather(df):
     df = df.drop('일시', axis = 1)
     return df
 
-
+############## 미세먼지(PM10, PM25) 데이터(출처 : 에어코리아) ##############
 def preprocessing_dust(df):
     temp = df.loc[df['지역'].str.contains('서울|경기|인천|부산|울산|대구|대전|광주')]
     del df
@@ -77,12 +75,12 @@ def preprocessing_dust(df):
     prep_df = prep_df.drop('측정일시', axis = 1)
     return prep_df
 
-
+############## 경제 데이터 ##############
 def preprocessing_economy():
-    df1 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '소매업태별 판매액지수.xlsx'))
-    df2 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '소비자동향조사 전국.csv'), encoding = 'cp949')
-    df3 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '온라인쇼핑몰 판매매체별 상품군별거래액.xlsx'))
-    df4 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '지역별 소비유형별 개인 신용카드.xlsx'))
+    df1 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '소매업태별 판매액지수.xlsx')) # 출처 : KOSIS
+    df2 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '소비자동향조사 전국.csv'), encoding = 'cp949') # 출처 : KOSIS
+    df3 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '온라인쇼핑몰 판매매체별 상품군별거래액.xlsx')) # 출처 : KOSIS
+    df4 = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '지역별 소비유형별 개인 신용카드.xlsx')) # 출처 : 한국은행
     
     # df1 정제
     df1['업태별'] = df1['업태별'].apply(lambda x : x.strip())

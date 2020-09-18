@@ -85,6 +85,7 @@ def engineering_data(df):
     # 마더코드 가격 집계 merge
     df = df.merge(mothercode, on = '마더코드', how = 'left')
     
+    item.to_csv(os.path.join('..', '..', '0.Data', '01_제공데이터', 'item_meta.csv'), index = False, encoding = 'cp949')
     
     return df
 
@@ -211,11 +212,7 @@ def engineering_DatePrice(df, dataset):
 ############## 판매량 관련 FE ##############
 def engineering_order(df):
     # 방송날짜별 상품군별 취급액 계산
-#     sale = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'sale_data_v05_0828.xlsx'))
-    df['방송날'] = df['방송일시'].dt.date
-#     temp = df.groupby(['상품군', '방송날'])['취급액'].sum().reset_index()
-#     temp['방송날'] = pd.to_datetime(temp['방송날'])
-    
+    df['방송날'] = df['방송일시'].dt.date    
     df['방송년도'] = df['방송일시'].dt.year
     df['방송월'] = df['방송일시'].dt.month
     df['방송시간(시간)'] = df['방송일시'].dt.hour
@@ -223,7 +220,7 @@ def engineering_order(df):
     df['판매량'] = df['취급액'] / df['판매단가']
     df['판매량'] = df['판매량'].fillna(0).apply(lambda x : math.ceil(x))
     
-    # 월별 상품군 판매량
+    # [월별 상품군 판매량]
     temp = pd.pivot_table(df, index = '상품군', columns = '방송월', values = '판매량', aggfunc = np.mean).T.reset_index()
     temp.columns = [temp.columns[0]] + list(map(lambda x :  x, temp.columns[1:]))
     df['상품군별월별평균판매량'] = None
@@ -231,7 +228,7 @@ def engineering_order(df):
         for cate in df['상품군'].unique():
             df.loc[(df['방송월'] == i) & (df['상품군'] == cate), '상품군별월별평균판매량'] = temp[cate].loc[temp['방송월'] == i].values[0]
 
-    # 시간대별(시각) 상품군 판매량
+    # [시간대별(시각) 상품군 판매량]
     temp = pd.pivot_table(df, index = '상품군', columns = '방송시간(시간)', values = '판매량', aggfunc = np.mean).T.reset_index()
     temp.columns = [temp.columns[0]] + list(map(lambda x : x, temp.columns[1:]))
     df['상품군별시간대별평균판매량'] = None
@@ -242,7 +239,7 @@ def engineering_order(df):
             except:
                 continue
     
-    # 시간별(분) 상품군 판매량
+    # [시간별(분) 상품군 판매량]
     temp = pd.pivot_table(df, index = '상품군', columns = '방송시간(분)', values = '판매량', aggfunc = np.mean).T.reset_index()
     temp.columns = [temp.columns[0]] + list(map(lambda x : x, temp.columns[1:]))
     df['상품군별시간분별평균판매량'] = None
@@ -254,13 +251,13 @@ def engineering_order(df):
                 continue
     df[['상품군별월별평균판매량', '상품군별시간대별평균판매량', '상품군별시간분별평균판매량']] = df[['상품군별월별평균판매량', '상품군별시간대별평균판매량', '상품군별시간분별평균판매량']].astype(float)
     
-    # 할인율
+    # [할인율]
     rt = pd.read_csv(os.path.join('..', '..', '0.Data', '01_제공데이터', 'prep_discountRt.csv'), encoding = 'cp949')
     df['할인율'] = rt.values
     
     return df
 
-
+############## 시계열 관련 FE ##############
 def engineering_timeSeries(df):
     
     df['방송날'] = df['방송일시'].dt.date
