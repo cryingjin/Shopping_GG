@@ -48,7 +48,6 @@ sale = sale.merge(emb.drop_duplicates(), on = 'NEW상품명', how = 'left')
 
 del emb
 gc.collect()
-
 # print('Complete emb Feature enginnering!')
 
 ############## 외부 데이터 FE ##############
@@ -85,42 +84,64 @@ print('Complete external Feature enginnering!')
 print('========== Start Data preprocessing ==========')
 categorys = ['결제방법', '상품군_가격대', '전체_가격대', '상품군', '방송시간(시간)', '방송시간(분)', '성별']
 drop_columns = ['방송일시', # 월, 일, 시간, 분으로 표현
-                '마더코드', # 
-                '상품코드', #
-                '상품명', # 임베딩
-                'NEW상품코드', #
-                'NEW상품명', # 임베딩
-                '단위', # 임베딩
-                '브랜드', # 임베딩
-                '취급액', # target
-                '모델명',
-                '상품명다시']
-
+                    '마더코드', # 
+                    '상품코드', #
+                    '상품명', # 임베딩
+                    'NEW상품코드', #
+                    'NEW상품명', # 임베딩
+                    '단위', # 임베딩
+                    '브랜드', # 임베딩
+                    '취급액', # target
+                    '모델명',
+                    '상품명다시']
 data[categorys] = data[categorys].astype(str)
-    
 # 예측 상품 중 판매가 0인 프로그램 실적은 예측에서 제외함 -> 무형 제외
 data = data.loc[data['상품군'] != '무형']
-# 주문이 0인, 취급액이 0인 데이터 제외함
-data = data.loc[data['취급액'].notnull()]
-
-y = data['취급액']
-drop_data = data[drop_columns]
-data = data.drop(drop_columns, axis = 1)
-
 today = datetime.today().strftime('%Y%m%d%H%M')
 
-joblib.dump({
-    'X' : data,
-    'y' : y
-}, os.path.join('..', '..', '0.Data', '05_분석데이터', '6th_FE_{}_before.pkl').format(today))
-print('before Data saved!')
+if args.dataset == 'train':
+    # 주문이 0인, 취급액이 0인 데이터 제외함
+    data = data.loc[data['취급액'].notnull()]
+    y = data['취급액']
+    drop_data = data[drop_columns]
+    data = data.drop(drop_columns, axis = 1)
+    
+#     joblib.dump({
+#         'X' : data,
+#         'y' : y
+#     }, os.path.join('..', '..', '0.Data', '05_분석데이터', '6th_FE_{}_before.pkl').format(today))
+#     print('before Data saved!')
 
-X = pd.get_dummies(data)
-print('Complete Data preprocessing!')
-print('complete Data saving.....')
+    X = pd.get_dummies(data)
+    print('Complete Data preprocessing!')
+    print('Data saving.....')
+    joblib.dump({
+        'X' : X,
+        'y' : y
+    }, os.path.join('..', '..', '0.Data', '05_분석데이터', 'train_FE_{}.pkl').format(today))
+    print('Data saved!')
+    
+elif args.dataset == 'test':
+    drop_columns.remove('취급액')
+    drop_data = data[drop_columns]
+    data = data.drop(drop_columns, axis = 1)
+    
+    X = pd.get_dummies(data)
+    print('Complete Data preprocessing!')
+    print('Data saving.....')
+    joblib.dump({
+        'X' : X,
+    }, os.path.join('..', '..', '0.Data', '05_분석데이터', 'test_FE_{}.pkl').format(today))
+    print('Data saved!')
+    
+else:
+    print('dataset error.....')
 
-joblib.dump({
-    'X' : X,
-    'y' : y
-}, os.path.join('..', '..', '0.Data', '05_분석데이터', '6th_FE_{}.pkl').format(today))
-print('Data saved!')
+    
+
+
+    
+
+
+
+
