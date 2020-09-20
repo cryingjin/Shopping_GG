@@ -97,7 +97,7 @@ if __name__ == '__main__':
             optimizer.apply_gradients(zip(grads, model.trainable_variables),
                                   global_step)
             
-            if global_step.numpy() % 500 == 0:
-                print("Step: {},         Loss: {}".format(global_step.numpy(),
-                                              loss(x_inp, reconstruction).numpy()))
+        if epoch == 0:
+            print("Step: {},         Loss: {}".format(global_step.numpy(),
+                                            loss(x_inp, reconstruction).numpy()))
 
