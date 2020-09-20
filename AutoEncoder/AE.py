@@ -1,7 +1,9 @@
 import tensorflow as tf
+from tensorflow.keras import backend as K
 from tensorflow.keras import layers
 import pandas as pd
 import numpy as np
+import argparse
 from sklearn.model_selection import train_test_split
 
 
@@ -75,7 +77,12 @@ def grad(model, inputs, targets):
     return loss_value, tape.gradient(loss_value, model.trainable_variables), reconstruction
 
 if __name__ == '__main__':
-    data = pd.read_excel("Rec_user_item_matrix2.xlsx")
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dir",  type=str, default="./Rec_user_item_matrix2.xlsx",help="input data path")
+    args = ap.parse_args()
+    data_dir = args.dir
+    data = pd.read_excel(data_dir)
     X = data.iloc[:,1:]
 
     x_train, x_test, _, _ = train_test_split(np.asarray(X),np.asarray(X),test_size=0.1,shuffle=False,random_state=1004)
