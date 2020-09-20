@@ -152,13 +152,16 @@ def engineering_DatePrice(df, dataset):
     df.loc[df['NEW상품명'].isnull(), 'NEW상품명'] = df.loc[df['NEW상품명'].isnull(), '상품명']
     
     ## [공휴일여부]
-    if dataset == 'train':
-        year = 2019
-    elif dataset == 'test':
-        year = 2020
-    else:
-        print('dataset error.....')
-    holidays = getHoliday(year)
+    try:
+        if dataset == 'train':
+            year = 2019
+        elif dataset == 'test':
+            year = 2020
+        else:
+            print('dataset error.....')
+        holidays = getHoliday(year)
+    except:
+        holidays = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '특일정보.xlsx'))
     df = df.merge(holidays[['locdate', 'isHoliday']], left_on = df['방송일시'].dt.date.astype(str), right_on = 'locdate', how = 'left').drop('locdate', axis = 1)
     df['isHoliday'] = df['isHoliday'].apply(lambda x : 1 if x == 'Y' else 0)
     
