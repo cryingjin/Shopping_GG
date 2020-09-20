@@ -43,8 +43,30 @@ class AutoEncoder(tf.keras.Model):
         decoded = self.decoder(encoded)
         return decoded
 
-def loss(x, x_bar):
-    return tf.losses.mean_squared_error(x, x_bar)
+def masked_mse(y_true, y_pred):
+    # masked function
+    mask_true = K.cast(K.not_equal(y_true, 0), K.floatx())
+    # masked squared error
+    masked_squared_error = K.square(mask_true * (y_true - y_pred))
+    masked_mse = K.sum(masked_squared_error, axis=-1) / K.maximum(K.sum(mask_true, axis=-1), 1)
+    return masked_mse
+
+def loss(y_true, y_pred): #masked rmse
+        # masked function
+        mask_true = K.cast(K.not_equal(y_true, 0), K.floatx())
+        # masked squared error
+        masked_squared_error = K.square(mask_true * (y_true - y_pred))
+        masked_mse = K.sqrt(K.sum(masked_squared_error, axis=-1) / K.maximum(K.sum(mask_true, axis=-1), 1))
+        return masked_mse
+
+def masked_rmse_clip(y_true, y_pred):
+    # masked function
+    mask_true = K.cast(K.not_equal(y_true, 0), K.floatx())
+    y_pred = K.clip(y_pred, 1, 10)
+    # masked squared error
+    masked_squared_error = K.square(mask_true * (y_true - y_pred))
+    masked_mse = K.sqrt(K.sum(masked_squared_error, axis=-1) / K.maximum(K.sum(mask_true, axis=-1), 1))
+    return masked_mse
 
 def grad(model, inputs, targets):
     with tf.GradientTape() as tape:
