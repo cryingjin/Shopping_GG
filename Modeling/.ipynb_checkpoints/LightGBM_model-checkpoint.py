@@ -5,10 +5,10 @@ import joblib
 import pickle as pkl
 
 import warnings
-from sklearn.exceptions import DataConversionWarning
 warnings.filterwarnings(action='ignore')
-warnings.filterwarnings(action='ignore', category=DataConversionWarning)
 
+from sklearn.exceptions import DataConversionWarning
+warnings.filterwarnings(action='ignore', category=DataConversionWarning)
 
 import xgboost as xgb
 import lightgbm as lgb
@@ -19,21 +19,14 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
 # MAPE 
-def MAPE(y_true, y_pred): 
-    y_true, y_pred = np.array(y_true), np.array(y_pred)
-    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
-
-
-# MAPE_exp  
 def MAPE_exp(y_true, y_pred): 
     y_true, y_pred = np.array(y_true), np.array(y_pred)
     return np.mean(np.abs((np.exp(y_true) - np.exp(y_pred)) / np.exp(y_true))) * 100
 
 
 
-
 # XGBoost
-def xgb_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):        
+def xgb_model(X, y, params, version, cv_splits=5, scaling=False, epoch=30000):        
     mape = {'val_mape' : [], 'test_mape' : [], 'final_mape' : []}
     pred = {'val_idx'  : [], 'val_pred'  : [],
             'test_idx' : [], 'test_pred' : [],
@@ -44,7 +37,7 @@ def xgb_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
     X_train_, X_test_, y_train_, y_test_ = train_test_split(X, y, test_size=0.2, random_state=77)
     pred['test_idx'].append(X_test_.index)
 
-    
+
     # K Fold Cross Validation
     cv = KFold(n_splits=cv_splits, random_state=77, shuffle=True)
     for t,v in cv.split(X_train_):
@@ -77,7 +70,7 @@ def xgb_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
         watchlist = [(train_T, 'train'), (val_T, 'valid')]  
             
 
-        model = xgb.train(params, train_T, epoch, watchlist, verbose_eval=2500, early_stopping_rounds=500)
+        model = xgb.train(params, train_T, 20000, watchlist, verbose_eval=10000, early_stopping_rounds=500)
         
 
         val_pred = model.predict(val_T)
@@ -85,7 +78,7 @@ def xgb_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
 
         test_T = xgb.DMatrix(X_test)
         test_pred = model.predict(test_T)
-        pred['test_pred'].append(np.exp(test_pred))
+        pred['test_pred'].append(test_pred)
 
 
         # mape
@@ -96,7 +89,7 @@ def xgb_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
 
     # final values
     final_test = np.mean(pred['test_pred'], axis=0)
-    final_mape = MAPE(np.exp(y_test_), final_test)
+    final_mape = MAPE_exp(y_test_, final_test)
     
     pred['final_pred'].append(final_test)
     mape['final_mape'].append(final_mape)
@@ -108,14 +101,13 @@ def xgb_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
     with open('xgb_mape.pickle' + version, 'wb') as f:
         pkl.dump(mape, f, pkl.HIGHEST_PROTOCOL)
 
-        
+
     return mape, pred
 
 
 
-
 # LightGBM
-def lgbm_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):        
+def lgbm_model(X, y, params, version, cv_splits=5, scaling=False, epoch=30000):        
     mape = {'val_mape' : [], 'test_mape' : [], 'final_mape' : []}
     pred = {'val_idx'  : [], 'val_pred'  : [],
             'test_idx' : [], 'test_pred' : [],
@@ -152,21 +144,20 @@ def lgbm_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
             X_val = X_val.values
             X_test = X_test_.values
 
-            
 
         # modeling 
         train_T = lgb.Dataset(X_train, label=y_train.values) 
         val_T   = lgb.Dataset(X_val, label=y_val.values)   
 
 
-        model = lgb.train(params, train_T, epoch, valid_sets = val_T, verbose_eval=2500, early_stopping_rounds=500)
+        model = lgb.train(params, train_T, epoch, valid_sets = val_T, verbose_eval=10000, early_stopping_rounds=500)
 
 
         val_pred = model.predict(X_val)
         pred['val_pred'].append(np.exp(val_pred))
 
         test_pred = model.predict(X_test)
-        pred['test_pred'].append(np.exp(test_pred))
+        pred['test_pred'].append(test_pred)
 
 
         # mape
@@ -177,7 +168,7 @@ def lgbm_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
 
     # final values
     final_test = np.mean(pred['test_pred'], axis=0)
-    final_mape = MAPE(np.exp(y_test_), final_test)
+    final_mape = MAPE_exp(y_test_, final_test)
     
     pred['final_pred'].append(final_test)
     mape['final_mape'].append(final_mape)
@@ -189,12 +180,12 @@ def lgbm_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
     with open('lgbm_mape.pickle' + version, 'wb') as f:
         pkl.dump(mape, f, pkl.HIGHEST_PROTOCOL)
 
-        
+
     '''
     # load
     with open('data.pickle', 'rb') as f:
     data = pkl.load(f)
     '''
 
-    
+
     return mape, pred

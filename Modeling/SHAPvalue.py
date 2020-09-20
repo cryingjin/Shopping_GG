@@ -17,6 +17,8 @@ from sklearn.model_selection import KFold, cross_val_score, train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
+import shap
+
 
 # MAPE 
 def MAPE(y_true, y_pred): 
@@ -33,11 +35,13 @@ def MAPE_exp(y_true, y_pred):
 
 
 # XGBoost
-def xgb_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):        
+def xgb_SHAP(X, y, params, version, cv_splits=5, scaling=False, epoch=10000):        
     mape = {'val_mape' : [], 'test_mape' : [], 'final_mape' : []}
     pred = {'val_idx'  : [], 'val_pred'  : [],
             'test_idx' : [], 'test_pred' : [],
-            'final_pred' : []}      # final : test set mean 값
+            'final_pred' : []}      # final : test set mean 값 
+
+    SHAP = {'shap_values': [], 'expected_value' : []}
     
 
     # train, test split
@@ -92,6 +96,14 @@ def xgb_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
         mape['val_mape'].append(MAPE_exp(y_val, val_pred))
         mape['test_mape'].append(MAPE_exp(y_test_, test_pred))
 
+
+        # SHAP 
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(X_test.values)
+
+        SHAP['shap_values'].append(shap_values)
+        SHAP['expected_value'].append(explainer.expected_value)
+
         
 
     # final values
@@ -101,25 +113,33 @@ def xgb_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
     pred['final_pred'].append(final_test)
     mape['final_mape'].append(final_mape)
 
+    SHAP['expected_value'].append(np.mean(SHAP['expected_values']))
+    SHAP['shap_value'].append(np.mean(SHAP['shap_values'], axis=0))
+
+
     
     # save pickle
     with open('xgb_pred.pickle' + version, 'wb') as f:
         pkl.dump(pred, f, pkl.HIGHEST_PROTOCOL)
     with open('xgb_mape.pickle' + version, 'wb') as f:
         pkl.dump(mape, f, pkl.HIGHEST_PROTOCOL)
-
+    with open('xgb_shap.pickle' + version, 'wb') as f:
+        pkl.dump(mape, f, pkl.HIGHEST_PROTOCOL)
         
-    return mape, pred
+    return mape, pred, SHAP
 
 
 
 
 # LightGBM
-def lgbm_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):        
+def lgbm_SHAP(X, y, params, version, cv_splits=5, scaling=False, epoch=10000):        
     mape = {'val_mape' : [], 'test_mape' : [], 'final_mape' : []}
     pred = {'val_idx'  : [], 'val_pred'  : [],
             'test_idx' : [], 'test_pred' : [],
             'final_pred' : []}      # final : test set mean 값
+
+    SHAP = {'shap_values': [], 'expected_values' : [], 
+            'shap_value' : [], 'expected_value'  : []}
     
 
     # train, test split
@@ -173,6 +193,14 @@ def lgbm_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
         mape['val_mape'].append(MAPE_exp(y_val, val_pred))
         mape['test_mape'].append(MAPE_exp(y_test_, test_pred))
 
+
+        # SHAP 
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(X_test.values)
+
+        SHAP['shap_values'].append(shap_values)
+        SHAP['expected_value'].append(explainer.expected_value)
+
         
 
     # final values
@@ -182,12 +210,17 @@ def lgbm_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
     pred['final_pred'].append(final_test)
     mape['final_mape'].append(final_mape)
 
+    SHAP['expected_value'].append(np.mean(SHAP['expected_values']))
+    SHAP['shap_value'].append(np.mean(SHAP['shap_values'], axis=0))
+
 
     # save pickle
     with open('lgbm_pred.pickle' + version, 'wb') as f:
         pkl.dump(pred, f, pkl.HIGHEST_PROTOCOL)
     with open('lgbm_mape.pickle' + version, 'wb') as f:
         pkl.dump(mape, f, pkl.HIGHEST_PROTOCOL)
+    with open('lgbm_shap.pickle' + version, 'wb') as f:
+        pkl.dump(SHAP, f, pkl.HIGHEST_PROTOCOL)
 
         
     '''
@@ -197,4 +230,4 @@ def lgbm_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
     '''
 
     
-    return mape, pred
+    return mape, pred, SHAP

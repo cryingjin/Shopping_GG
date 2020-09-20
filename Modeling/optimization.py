@@ -33,7 +33,7 @@ def MAPE_exp(y_true, y_pred):
 
 
 # XGBoost
-def xgb_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):        
+def xgb_model(X, y, params, cv_splits=5, scaling=False, epoch=10000):        
     mape = {'val_mape' : [], 'test_mape' : [], 'final_mape' : []}
     pred = {'val_idx'  : [], 'val_pred'  : [],
             'test_idx' : [], 'test_pred' : [],
@@ -101,12 +101,7 @@ def xgb_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
     pred['final_pred'].append(final_test)
     mape['final_mape'].append(final_mape)
 
-    
-    # save pickle
-    with open('xgb_pred.pickle' + version, 'wb') as f:
-        pkl.dump(pred, f, pkl.HIGHEST_PROTOCOL)
-    with open('xgb_mape.pickle' + version, 'wb') as f:
-        pkl.dump(mape, f, pkl.HIGHEST_PROTOCOL)
+
 
         
     return mape, pred
@@ -181,20 +176,6 @@ def lgbm_model(X, y, params, version, cv_splits=5, scaling=False, epoch=20000):
     
     pred['final_pred'].append(final_test)
     mape['final_mape'].append(final_mape)
-
-
-    # save pickle
-    with open('lgbm_pred.pickle' + version, 'wb') as f:
-        pkl.dump(pred, f, pkl.HIGHEST_PROTOCOL)
-    with open('lgbm_mape.pickle' + version, 'wb') as f:
-        pkl.dump(mape, f, pkl.HIGHEST_PROTOCOL)
-
-        
-    '''
-    # load
-    with open('data.pickle', 'rb') as f:
-    data = pkl.load(f)
-    '''
 
     
     return mape, pred
