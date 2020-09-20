@@ -6,4 +6,7 @@
 
 |Layers|lr|Epoch|
 |:---:|:---|:---|
-|Single AE|0.0001|10000|
+|Single AE|0.01(reducelr monitoring val_loss)|20000|
+
+![image](https://user-images.githubusercontent.com/41895063/93716001-c0bddd00-fba7-11ea-9396-9a5913b25c9f.png)
+
