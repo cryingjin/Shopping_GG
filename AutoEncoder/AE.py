@@ -16,35 +16,41 @@ class AutoEncoder(tf.keras.Model):
         self.latent_dim = latent_dim
         self.X_size = X_size
         self.encoder = tf.keras.Sequential([
-            layers.Dense(512, activation = 'selu'),
+            layers.Dense(512, activation = 'selu', kernel_initializer='he_normal'),
+            layers.Dense(512, activation = 'selu', kernel_initializer='he_normal'),
+            
             layers.BatchNormalization(),
             layers.Dropout(0.2),
-            layers.Dense(256, activation = 'selu'),
+            layers.Dense(256, activation = 'selu', kernel_initializer='he_normal'),
+            layers.Dense(256, activation = 'selu', kernel_initializer='he_normal'),
             layers.BatchNormalization(),
             layers.Dropout(0.2),
-            layers.Dense(128, activation = 'selu'),
+            layers.Dense(128, activation = 'selu', kernel_initializer='he_normal'),
+            layers.Dense(128, activation = 'selu', kernel_initializer='he_normal'),
             layers.BatchNormalization(),
             layers.Dropout(0.2),
             layers.Dense(latent_dim, activation = 'selu')
         ])
         self.decoder = tf.keras.Sequential([
-            layers.Dense(128,activation = 'selu'),
+            layers.Dense(128, activation = 'selu', kernel_initializer='he_normal'),
+            layers.Dense(128, activation = 'selu', kernel_initializer='he_normal'),
             layers.BatchNormalization(),
             layers.Dropout(0.2),
-            layers.Dense(256,activation = 'selu'),
+            layers.Dense(256, activation = 'selu', kernel_initializer='he_normal'),
+            layers.Dense(256, activation = 'selu', kernel_initializer='he_normal'),
             layers.BatchNormalization(),
             layers.Dropout(0.2),
-            layers.Dense(512,activation = 'selu'),
+            layers.Dense(512, activation = 'selu', kernel_initializer='he_normal'),
+            layers.Dense(512, activation = 'selu', kernel_initializer='he_normal'),
             layers.BatchNormalization(),
             layers.Dropout(0.2),
-            layers.Dense(X_size,activation = 'sigmoid')
+            layers.Dense(X_size,activation = 'selu')
         ])
     
     def call(self, x):
         encoded = self.encoder(x)
         decoded = self.decoder(encoded)
         return decoded
-
 def masked_mse(y_true, y_pred):
     # masked function
     mask_true = K.cast(K.not_equal(y_true, 0), K.floatx())
