@@ -14,7 +14,7 @@ def prepColumns(df):
 ############## 날짜 데이터(출처 : 기상자료개방포털) ##############
 def preprocessing_weather(df):
     df = df.loc[df['지점명'].str.contains('인천|울산|대구|대전|수원|부산|광주|서울')]
-    df = df.rename(columns = {'수원' : '경기'})
+    df.loc[df['지점명'] == '수원', '지점명'] = '경기'
     df = df.reset_index(drop = True)
     
     # 변수 정리
@@ -146,17 +146,15 @@ def preprocessing_economy():
     # 경제지수는 한달 전 수치를 사용하기 위해서
     from dateutil.relativedelta import relativedelta
     df['날짜'] = df['날짜'].apply(lambda x: x + relativedelta(months = 1))
-    
     df['연도'] = df['날짜'].dt.year
     df['월'] = df['날짜'].dt.month
     
     from sklearn.decomposition import PCA
     pca = PCA(n_components = 5)
-    X = pca.fit_transform(df.iloc[:,34:-2])
-    df = pd.concat([df.iloc[:, -2:], df.iloc[:, :34], pd.DataFrame(X, columns = ['pca_1',  'pca_2', 'pca_3', 'pca_4', 'pca_5'])], axis = 1)
-    
+    X = pca.fit_transform(df.iloc[:,1:60])
+    df = pd.concat([df.iloc[:, -2:], df.iloc[:, 60:-2], pd.DataFrame(X, columns = ['pca_1',  'pca_2', 'pca_3', 'pca_4', 'pca_5'])], axis = 1)
+    df = df.astype(float)
     return df
-
 
 
 

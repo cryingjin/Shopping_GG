@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 
 
 ############## 제공데이터 전처리 ##############
-def engineering_data(df):
+def engineering_data(df, dataset):
     
     if dataset == 'train':
         # 수작업 데이터 불러오기 (2019 제공데이터를 가지고 수작업 한 파일)
@@ -23,6 +23,8 @@ def engineering_data(df):
         # 수작업 데이터 불러오기 (2019 제공데이터를 가지고 수작업 한 파일 + 2020 평가데이터를 가지고 수작업 한 파일)
         meta_train = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
         meta_test = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', 'test수작업_meta.xlsx'))
+        meta = pd.concat([meta_train, meta_test], axis = 0)
+        
         df = df.merge(meta[['상품코드', 'NEW상품명', '브랜드', '결제방법', '상품명다시', '단위', '모델명', '성별', 'NS카테고리', '옵션']], on = '상품코드', how = 'left')
         item = meta[['NEW상품명', '상품군']].drop_duplicates().reset_index(drop = True).reset_index().rename(columns = {'index' : 'NEW상품코드'})
     else:
@@ -50,7 +52,7 @@ def engineering_data(df):
                   ('NEW_표준편차', np.std)
                  ]
     }).reset_index()
-    temp = prepColumn(temp)
+    temp = prepColumn(temp).fillna(0)
     
     item = item.merge(temp, on = 'NEW상품명', how = 'left')
     
@@ -71,7 +73,7 @@ def engineering_data(df):
                   ('마더코드_표준편차', np.std)
                  ]
     }).reset_index()
-    mothercode = prepColumn(mothercode)
+    mothercode = prepColumn(mothercode).fillna(0)
 
     # 상품군 기준 집계 데이터프레임 생성
     itemcategory = df.groupby('상품군').agg({
@@ -84,7 +86,7 @@ def engineering_data(df):
                   ('상품군_분산', np.var)
                  ]
     }).reset_index()
-    itemcategory = prepColumn(itemcategory)
+    itemcategory = prepColumn(itemcategory).fillna(0)
     
     # NEW아이템 가격 집계 merge
     df = df.merge(item.drop('상품군', axis = 1), on = 'NEW상품명', how = 'left')
@@ -120,9 +122,8 @@ def engineering_TimeDiff(df) :
     df = df.merge(timediff, on = ['방송날', 'NEW상품명'], how = 'left')
     
     # [상품 및 브랜드 총 판매 횟수 ] 동일 상품 / 브랜드 총 방송횟수
-    df = df.merge(df.groupby('NEW상품명')['방송날'].nunique().reset_index().rename(columns = {'방송날' : '상품방송횟수'}), on = 'NEW상품명', how = 'left')
-    
-    df = df.merge(df.groupby('브랜드')['방송날'].nunique().reset_index().rename(columns = {'방송날' : '브랜드방송횟수'}), on = '브랜드', how = 'left') 
+#     df = df.merge(df.groupby('NEW상품명')['방송날'].nunique().reset_index().rename(columns = {'방송날' : '상품방송횟수'}), on = 'NEW상품명', how = 'left')
+#     df = df.merge(df.groupby('브랜드')['방송날'].nunique().reset_index().rename(columns = {'방송날' : '브랜드방송횟수'}), on = '브랜드', how = 'left')
     df = df.drop('방송날', axis = 1)
     
     # [조기매진] (20분 이하 혹은 20분과 30분 사이에 조기 종료된 프로그램 선별)
@@ -135,7 +136,7 @@ def engineering_TimeDiff(df) :
     df['옵션'] = df['옵션'].fillna(0)
     df['옵션여부'] = df['옵션'].apply(lambda x : 1 if x != 0 else 0)
     
-    return df 
+    return df
 
 
 ############## 날짜&가격 관련 FE ##############

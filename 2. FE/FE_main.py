@@ -32,7 +32,7 @@ else:
 
 # 기본 데이터 FE
 print('Inner Feature enginnering.....')
-sale = FEin.engineering_data(sale)
+sale = FEin.engineering_data(sale, args.dataset)
 sale = FEin.engineering_TimeDiff(sale)
 sale = FEin.engineering_DatePrice(sale, args.dataset)
 sale = FEin.engineering_order(sale)
@@ -83,7 +83,9 @@ print('Complete external Feature enginnering!')
 ############## 데이터 Preprocessing ##############
 print('========== Start Data preprocessing ==========')
 categorys = ['결제방법', '상품군_가격대', '전체_가격대', '상품군', '방송시간(시간)', '방송시간(분)', '성별']
-drop_columns = ['방송일시', # 월, 일, 시간, 분으로 표현
+drop_columns = [
+                '방송일시', # 월, 일, 시간, 분으로 표현
+                '방송년도',
                 '마더코드', # 
                 '상품코드', #
                 '상품명', # 임베딩
@@ -94,7 +96,8 @@ drop_columns = ['방송일시', # 월, 일, 시간, 분으로 표현
                 '취급액', # target
                 '모델명', # 
                 '상품명다시', # 임베딩
-                '옵션'] # 옵션여부
+                '옵션', # 옵션여부,
+                '판매량']
 
 data[categorys] = data[categorys].astype(str)
 # 예측 상품 중 판매가 0인 프로그램 실적은 예측에서 제외함 -> 무형 제외
