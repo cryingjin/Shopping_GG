@@ -11,12 +11,20 @@ from datetime import datetime, timedelta
 
 ############## 제공데이터 전처리 ##############
 def engineering_data(df):
-    # 수작업 데이터 불러오기 (2019 제공데이터를 가지고 수작업 한 파일)
-    meta = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', '수작업_meta.xlsx'))
     
-    df = df.merge(meta[['상품코드', 'NEW상품명', '브랜드', '결제방법', '상품명다시', '단위', '모델명', '성별', 'NS카테고리']], on = '상품코드', how = 'left')
-    
-    item = meta[['NEW상품명', '상품군']].drop_duplicates().reset_index(drop = True).reset_index().rename(columns = {'index' : 'NEW상품코드'})
+    if dataset == 'train':
+        # 수작업 데이터 불러오기 (2019 제공데이터를 가지고 수작업 한 파일)
+        meta = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
+        df = df.merge(meta[['상품코드', 'NEW상품명', '브랜드', '결제방법', '상품명다시', '단위', '모델명', '성별', 'NS카테고리', '옵션']], on = '상품코드', how = 'left')
+        item = meta[['NEW상품명', '상품군']].drop_duplicates().reset_index(drop = True).reset_index().rename(columns = {'index' : 'NEW상품코드'})
+    elif dataset == 'test':
+        # 수작업 데이터 불러오기 (2019 제공데이터를 가지고 수작업 한 파일 + 2020 평가데이터를 가지고 수작업 한 파일)
+        meta_train = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
+        meta_test = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', 'test수작업_meta.xlsx'))
+        df = df.merge(meta[['상품코드', 'NEW상품명', '브랜드', '결제방법', '상품명다시', '단위', '모델명', '성별', 'NS카테고리', '옵션']], on = '상품코드', how = 'left')
+        item = meta[['NEW상품명', '상품군']].drop_duplicates().reset_index(drop = True).reset_index().rename(columns = {'index' : 'NEW상품코드'})
+    else:
+        print('dataset error.....')
     
     # 집계 데이터프레임 칼럼 정리
     def prepColumn(df):
@@ -85,7 +93,10 @@ def engineering_data(df):
     # 마더코드 가격 집계 merge
     df = df.merge(mothercode, on = '마더코드', how = 'left')
     
-    item.to_csv(os.path.join('..', '..', '0.Data', '01_제공데이터', 'item_meta.csv'), index = False, encoding = 'cp949')
+    if dataset == 'train':
+        item.to_csv(os.path.join('..', '..', '0.Data', '01_제공데이터', 'item_meta(train).csv'), index = False, encoding = 'cp949')
+    elif dataset == 'test':
+        item.to_csv(os.path.join('..', '..', '0.Data', '02_평가데이터', 'item_meta(test).csv'), index = False, encoding = 'cp949')
     
     return df
 
@@ -117,6 +128,10 @@ def engineering_TimeDiff(df) :
     
     # 방송일시의 nan 값 채워주는 부분
     df["노출(분)"] = df["노출(분)"].fillna(method='ffill')
+    
+    # [옵션여부]
+    df['옵션'] = df['옵션'].fillna(0)
+    df['옵션여부'] = df['옵션'].apply(lambda x : 1 if x != 0 else 0)
     
     return df 
 
