@@ -231,45 +231,67 @@ def engineering_DatePrice(df, dataset):
     return df
 
 ############## 판매량 관련 FE ##############
-def engineering_order(df):
+def engineering_order(df, dataset):
     # 방송날짜별 상품군별 취급액 계산
     df['방송날'] = df['방송일시'].dt.date    
     df['방송년도'] = df['방송일시'].dt.year
     df['방송월'] = df['방송일시'].dt.month
     df['방송시간(시간)'] = df['방송일시'].dt.hour
     df['방송시간(분)'] = df['방송일시'].dt.minute
-    df['판매량'] = df['취급액'] / df['판매단가']
-    df['판매량'] = df['판매량'].fillna(0).apply(lambda x : math.ceil(x))
+    if dataset == 'train':
+        df['판매량'] = df['취급액'] / df['판매단가']
+        df['판매량'] = df['판매량'].fillna(0).apply(lambda x : math.ceil(x))
+
+        # [월별 상품군 판매량]
+        temp_month = pd.pivot_table(df, index = '상품군', columns = '방송월', values = '판매량', aggfunc = np.mean).T.reset_index()
+        temp_month.columns = [temp_month.columns[0]] + list(map(lambda x :  x, temp_month.columns[1:]))
+        
+        # [시간대별(시각) 상품군 판매량]
+        temp_hour = pd.pivot_table(df, index = '상품군', columns = '방송시간(시간)', values = '판매량', aggfunc = np.mean).T.reset_index()
+        temp_hour.columns = [temp_hour.columns[0]] + list(map(lambda x : x, temp_hour.columns[1:]))
+
+        # [시간별(분) 상품군 판매량]
+        temp_minute = pd.pivot_table(df, index = '상품군', columns = '방송시간(분)', values = '판매량', aggfunc = np.mean).T.reset_index()
+        temp_minute.columns = [temp_minute.columns[0]] + list(map(lambda x : x, temp_minute.columns[1:]))
+        
+        # test 데이터 적용을 위한 저장
+        joblib.dump({
+            'volume4month' : temp_month,
+            'volume4hour' : temp_hour,
+            'volume4minute' : temp_minute
+        },
+            os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4volume.pkl'))
+        
+    elif dataest == 'test':
+        volume = joblib.load(os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4volum.pkl'))
+        temp_month = volume['volume4month']
+        temp_hour = volume['volume4hour']
+        temp_minute = volume['volume4minute']
+    
     
     # [월별 상품군 판매량]
-    temp = pd.pivot_table(df, index = '상품군', columns = '방송월', values = '판매량', aggfunc = np.mean).T.reset_index()
-    temp.columns = [temp.columns[0]] + list(map(lambda x :  x, temp.columns[1:]))
     df['상품군별월별평균판매량'] = None
-    for i in range(1, 13):
-        for cate in df['상품군'].unique():
-            df.loc[(df['방송월'] == i) & (df['상품군'] == cate), '상품군별월별평균판매량'] = temp[cate].loc[temp['방송월'] == i].values[0]
-
-    # [시간대별(시각) 상품군 판매량]
-    temp = pd.pivot_table(df, index = '상품군', columns = '방송시간(시간)', values = '판매량', aggfunc = np.mean).T.reset_index()
-    temp.columns = [temp.columns[0]] + list(map(lambda x : x, temp.columns[1:]))
+        for i in range(1, 13):
+            for cate in df['상품군'].unique():
+                df.loc[(df['방송월'] == i) & (df['상품군'] == cate), '상품군별월별평균판매량'] = temp_month[cate].loc[temp_month['방송월'] == i].values[0]
+                
+    # [시간대별(시각) 상품군 판매량]  
     df['상품군별시간대별평균판매량'] = None
-    for i in range(24):
-        for cate in df['상품군'].unique():
-            try:
-                df.loc[(df['방송시간(시간)'] == i) & (df['상품군'] == cate), '상품군별시간대별평균판매량'] = temp[cate].loc[temp['방송시간(시간)'] == i].values[0]
-            except:
-                continue
-    
-    # [시간별(분) 상품군 판매량]
-    temp = pd.pivot_table(df, index = '상품군', columns = '방송시간(분)', values = '판매량', aggfunc = np.mean).T.reset_index()
-    temp.columns = [temp.columns[0]] + list(map(lambda x : x, temp.columns[1:]))
+        for i in range(24):
+            for cate in df['상품군'].unique():
+                try:
+                    df.loc[(df['방송시간(시간)'] == i) & (df['상품군'] == cate), '상품군별시간대별평균판매량'] = temp_hour[cate].loc[temp_hour['방송시간(시간)'] == i].values[0]
+                except:
+                    continue
+    # [시간별(분) 상품군 판매량]                
     df['상품군별시간분별평균판매량'] = None
-    for i in df['방송시간(분)'].unique():
-        for cate in df['상품군'].unique():
-            try:
-                df.loc[(df['방송시간(분)'] == i) & (df['상품군'] == cate), '상품군별시간분별평균판매량'] = temp[cate].loc[temp['방송시간(분)'] == i].values[0]
-            except:
-                continue
+        for i in df['방송시간(분)'].unique():
+            for cate in df['상품군'].unique():
+                try:
+                    df.loc[(df['방송시간(분)'] == i) & (df['상품군'] == cate), '상품군별시간분별평균판매량'] = temp_minute[cate].loc[temp_minute['방송시간(분)'] == i].values[0]
+                except:
+                    continue
+        
     df[['상품군별월별평균판매량', '상품군별시간대별평균판매량', '상품군별시간분별평균판매량']] = df[['상품군별월별평균판매량', '상품군별시간대별평균판매량', '상품군별시간분별평균판매량']].astype(float)
     
     # [할인율]
