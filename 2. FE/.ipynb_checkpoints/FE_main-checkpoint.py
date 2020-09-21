@@ -35,11 +35,11 @@ print('Inner Feature enginnering.....')
 sale = FEin.engineering_data(sale, args.dataset)
 sale = FEin.engineering_TimeDiff(sale)
 sale = FEin.engineering_DatePrice(sale, args.dataset)
-sale = FEin.engineering_order(sale)
+sale = FEin.engineering_order(sale, args.dataset)
 
 # 시계열 데이터 FE
 print('Time Feature enginnering.....')
-sale = FEin.engineering_timeSeries(sale)
+sale = FEin.engineering_timeSeries(sale, args.dataset)
 
 # 임베딩 데이터 FE
 print('emb Feature enginnering.....')
@@ -111,38 +111,41 @@ if args.dataset == 'train':
     drop_data = data[drop_columns]
     data = data.drop(drop_columns, axis = 1)
     
-#     joblib.dump({
-#         'X' : data,
-#         'y' : y
-#     }, os.path.join('..', '..', '0.Data', '05_분석데이터', '6th_FE_{}_before.pkl').format(today))
-#     print('before Data saved!')
-
     X = pd.get_dummies(data)
     print('Complete Data preprocessing!')
     print('Data saving.....')
     joblib.dump({
         'X' : X,
         'y' : y
-    }, os.path.join('..', '..', '0.Data', '05_분석데이터', 'train_FE_{}.pkl').format(today))
-    print('Data saved!')
+    }, os.path.join('..', '..', '0.Data', '05_분석데이터', 'train_FE.pkl'))
+    print('Train Data saved!')
     
 elif args.dataset == 'test':
-    drop_columns.remove('취급액')
+    drop_columns.remove('판매량')
     drop_data = data[drop_columns]
     data = data.drop(drop_columns, axis = 1)
     
     X = pd.get_dummies(data)
+    
+    train = joblib.load(os.path.join('..', '..', '0.Data', '05_분석데이터', 'train_FE.pkl'))
+    train_columns = train['X'].columns
+    test_columns = X.columns
+    temp = pd.DataFrame(columns = list(set(train_columns) - set(test_columns)))
+    X = pd.concat([X, temp], axis = 1)
+    X[temp.columns] = X[temp.columns].fillna(0)
+    X = X[train_columns]
+    
     print('Complete Data preprocessing!')
     print('Data saving.....')
     joblib.dump({
         'X' : X,
-    }, os.path.join('..', '..', '0.Data', '05_분석데이터', 'test_FE_{}.pkl').format(today))
-    print('Data saved!')
+    }, os.path.join('..', '..', '0.Data', '05_분석데이터', 'test_FE.pkl'))
+    print('Test Data saved!')
     
 else:
     print('dataset error.....')
 
-    
+        
 
 
     

@@ -9,6 +9,7 @@ import pandas as pd
 import json
 import requests
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 
 ############## 제공데이터 전처리 ##############
@@ -60,7 +61,10 @@ def engineering_data(df, dataset):
     item['전체_가격대'] = item['NEW_최고판매단가'].apply(lambda x : '저가' if x <= 59000 else ('중저가' if 59000 < x <= 109900 else ('고가' if 109900 < x < 509000 else '초고가')))
     
     # 상품군 내 가격대 [상품군_가격대]
+    item.to_excel('./item.xlsx', index = False)
     for c in item['상품군'].unique():
+        if c == '무형':
+            continue
         item.loc[item['상품군'] == c, '상품군_가격대'] = pd.qcut(item.loc[item['상품군'] == c, 'NEW_최고판매단가'], q = 3, labels = False)
     
     # 마더코드 기준 집계 데이터프레임 생성
@@ -262,77 +266,88 @@ def engineering_order(df, dataset):
         },
             os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4volume.pkl'))
         
-    elif dataest == 'test':
-        volume = joblib.load(os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4volum.pkl'))
+    elif dataset == 'test':
+        volume = joblib.load(os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4volume.pkl'))
         temp_month = volume['volume4month']
         temp_hour = volume['volume4hour']
         temp_minute = volume['volume4minute']
+    else:
+        print('dataset error.....')
     
     
     # [월별 상품군 판매량]
     df['상품군별월별평균판매량'] = None
-        for i in range(1, 13):
-            for cate in df['상품군'].unique():
-                df.loc[(df['방송월'] == i) & (df['상품군'] == cate), '상품군별월별평균판매량'] = temp_month[cate].loc[temp_month['방송월'] == i].values[0]
-                
+    for i in range(1, 13):
+        for cate in df['상품군'].unique():
+            df.loc[(df['방송월'] == i) & (df['상품군'] == cate), '상품군별월별평균판매량'] = temp_month[cate].loc[temp_month['방송월'] == i].values[0]
+
     # [시간대별(시각) 상품군 판매량]  
     df['상품군별시간대별평균판매량'] = None
-        for i in range(24):
-            for cate in df['상품군'].unique():
-                try:
-                    df.loc[(df['방송시간(시간)'] == i) & (df['상품군'] == cate), '상품군별시간대별평균판매량'] = temp_hour[cate].loc[temp_hour['방송시간(시간)'] == i].values[0]
-                except:
-                    continue
+    for i in range(24):
+        for cate in df['상품군'].unique():
+            try:
+                df.loc[(df['방송시간(시간)'] == i) & (df['상품군'] == cate), '상품군별시간대별평균판매량'] = temp_hour[cate].loc[temp_hour['방송시간(시간)'] == i].values[0]
+            except:
+                continue
+                
     # [시간별(분) 상품군 판매량]                
     df['상품군별시간분별평균판매량'] = None
-        for i in df['방송시간(분)'].unique():
-            for cate in df['상품군'].unique():
-                try:
-                    df.loc[(df['방송시간(분)'] == i) & (df['상품군'] == cate), '상품군별시간분별평균판매량'] = temp_minute[cate].loc[temp_minute['방송시간(분)'] == i].values[0]
-                except:
-                    continue
+    for i in df['방송시간(분)'].unique():
+        for cate in df['상품군'].unique():
+            try:
+                df.loc[(df['방송시간(분)'] == i) & (df['상품군'] == cate), '상품군별시간분별평균판매량'] = temp_minute[cate].loc[temp_minute['방송시간(분)'] == i].values[0]
+            except:
+                 continue
         
     df[['상품군별월별평균판매량', '상품군별시간대별평균판매량', '상품군별시간분별평균판매량']] = df[['상품군별월별평균판매량', '상품군별시간대별평균판매량', '상품군별시간분별평균판매량']].astype(float)
     
     # [할인율]
-    rt = pd.read_csv(os.path.join('..', '..', '0.Data', '01_제공데이터', 'prep_discountRt.csv'), encoding = 'cp949')
-    df['할인율'] = rt.values
+#     rt = pd.read_csv(os.path.join('..', '..', '0.Data', '01_제공데이터', 'prep_discountRt.csv'), encoding = 'cp949')
+#     df['할인율'] = rt.values
     
     return df
 
 ############## 시계열 관련 FE ##############
-def engineering_timeSeries(df):
+def engineering_timeSeries(df, dataset):
     
     df['방송날'] = df['방송일시'].dt.date
     df['방송날'] = pd.to_datetime(df['방송날'])
     
-    piv = pd.pivot_table(df, index = '상품군', columns = '방송날', values = '판매량', aggfunc=np.mean)
-    pivT = piv.T
-    
-    ema_s = pivT.ewm(span=4).mean()
-    ema_m = pivT.ewm(span=12).mean()
-    ema_l = pivT.ewm(span=26).mean()
-    macd = ema_s - ema_l
-    sig = macd.ewm(span=9).mean()
-    
-    rol14 = pivT.fillna(0).rolling(14).mean()
-    rol30 = pivT.fillna(0).rolling(30).mean()
-    
-    
-    for tb, column in zip([ema_s, ema_m, ema_l, macd, sig, rol14, rol30], ['ema_s', 'ema_m', 'ema_l', 'macd', 'sig', 'rol14', 'rol30']):
-        new_columns = list(map(lambda x : '_'.join((column, x)), tb.columns))
-        tb.columns = new_columns
-    
-    timeS = pd.concat([ema_s, ema_m, ema_l, macd, sig, rol14, rol30], axis = 1)
-    timeS = timeS.drop(timeS.columns[timeS.columns.str.contains('무형')], axis = 1)
-    timeS = timeS.reset_index()
-    timeS['방송날'] = pd.to_datetime(timeS['방송날'])
-    
+    if dataset == 'train':
+        piv = pd.pivot_table(df, index = '상품군', columns = '방송날', values = '판매량', aggfunc=np.mean)
+        pivT = piv.T
+
+        ema_s = pivT.ewm(span=4).mean()
+        ema_m = pivT.ewm(span=12).mean()
+        ema_l = pivT.ewm(span=26).mean()
+        macd = ema_s - ema_l
+        sig = macd.ewm(span=9).mean()
+
+        rol14 = pivT.fillna(0).rolling(14).mean()
+        rol30 = pivT.fillna(0).rolling(30).mean()
+
+
+        for tb, column in zip([ema_s, ema_m, ema_l, macd, sig, rol14, rol30], ['ema_s', 'ema_m', 'ema_l', 'macd', 'sig', 'rol14', 'rol30']):
+            new_columns = list(map(lambda x : '_'.join((column, x)), tb.columns))
+            tb.columns = new_columns
+
+        timeS = pd.concat([ema_s, ema_m, ema_l, macd, sig, rol14, rol30], axis = 1)
+        timeS = timeS.drop(timeS.columns[timeS.columns.str.contains('무형')], axis = 1)
+        timeS = timeS.reset_index()
+        timeS['방송날'] = pd.to_datetime(timeS['방송날'])
+        
+        joblib.dump(timeS,
+                   os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4time.pkl'))
+        
+    elif dataset == 'test':
+        
+        timeS = joblib.load(os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4time.pkl'))
+        df['방송날'] = df['방송날'].apply(lambda x : x - relativedelta(years=1))
+
     timeFE = ['ema_s', 'ema_m', 'ema_l', 'macd', 'sig', 'rol14', 'rol30']
     temp = pd.DataFrame(columns = timeFE)
     df = pd.concat([df, temp], axis = 1)
     
-
     for dt, cate in df[['방송날', '상품군']].drop_duplicates().values:
         try:
             df.loc[(df['방송날'] == dt) & (df['상품군'] == cate), ['ema_s', 'ema_m', 'ema_l', 'macd', 'sig', 'rol14', 'rol30']] = timeS.loc[timeS['방송날'] == dt, timeS.columns[timeS.columns.str.contains(cate)]].values
