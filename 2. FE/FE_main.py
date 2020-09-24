@@ -61,10 +61,13 @@ df_wth = pd.concat([w_19, w_20], axis = 0)
 df_wth = FEex.preprocessing_weather(df_wth)
 
 # 미세먼지 데이터 FE
-dust_2019 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '2019_dust.csv'), encoding = 'cp949')
-dust_2020 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '2020_dust.csv'), encoding = 'cp949')
-df_dust = pd.concat([dust_2019, dust_2020], axis = 0)
-df_dust = FEex.preprocessing_dust(df_dust)
+if args.dataset == 'train':
+    dust_2019 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '2019_dust.csv'), encoding = 'cp949')
+    dust_2020 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '2020_dust.csv'), encoding = 'cp949')
+    df_dust = pd.concat([dust_2019, dust_2020], axis = 0)
+    df_dust = FEex.preprocessing_dust(df_dust)
+elif args.dataset == 'test':
+    df_dust = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '2020_dust', '2020년 6월.xlsx'))
 
 # 경제 데이터 FE
 df_eco = FEex.preprocessing_economy()

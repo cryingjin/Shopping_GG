@@ -41,7 +41,7 @@ def preprocessing_weather(df):
     return df
 
 ############## 미세먼지(PM10, PM25) 데이터(출처 : 에어코리아) ##############
-def preprocessing_dust(df):
+def preprocessing_dust(df, dataset):
     temp = df.loc[df['지역'].str.contains('서울|경기|인천|부산|울산|대구|대전|광주')]
     del df
     gc.collect()
