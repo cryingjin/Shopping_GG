@@ -13,7 +13,12 @@
 |0906|0906_ML_embedded_data_yj.ipynb|임베딩 피쳐 ver4 with lgbm||  
 |0907|0907_ML_basic_catboost_yj.ipynb|basic ml model & catboost||
 |0912|0912_ML_baysian_ver3_yj.ipynb|tunning with baysian search|predict 값 저장|
-|0917|0917_ML_gridsearch_ver4_yj.ipynb|basic ml tunning with grid search|predict 값 저장|| 
+|0916|0916_ML_cat_gridsearch_ver3_yj.ipynb|tunning catboost with gridsearch search|시간부족 실패|
+|0917|0917_ML_knn_gridsearch_yj.ipynb|tunning knn with grid search|비지도, 성능 70대|
+|0920|0920_ML_cat_bayesian_optuna_yj.ipynb|tunning catboost with bayesian & optuna|베이지안 하다맘, optuna 실패 고쳐야함|
+|0920|0920_ML_rf_bayesian_yj.ipynb|tunning rf with bayesian|loss 수렴 부분 고쳐야함|
+
+
 * 5th_FE_ver4   
 
 ## CrossValidation
