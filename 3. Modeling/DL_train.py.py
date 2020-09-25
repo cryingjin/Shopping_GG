@@ -72,8 +72,6 @@ def DL_model(X_num,X_emb):
 
         return model
 
-
-    mlp = create_mlp(X_num.shape[1], regress=False)
     cnn = create_1Dcnn(X_emb.shape[1])
     lstm = create_lstm((X_num.shape[1]))
     #print(mlp.output, lstm.output)
