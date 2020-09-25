@@ -120,7 +120,7 @@ def DataLoad_DL(data_dir,timeseries_list_dir):
     
     X = data['X']
     y = data['y'] 
-
+    y = np.log(y)
     
     
     column_list =[]
