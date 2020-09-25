@@ -12,6 +12,11 @@
 |LSTM&CNN-MLP| |[link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb)|
 |MultiLSTM&CNN-MLP|4|[link]([link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb))|
 
+## New Network (3_way)
+![image](https://user-images.githubusercontent.com/41895063/94240577-6e394380-ff4e-11ea-82cb-5668d009d323.png)
+
+
+
 ## 0925
 
 version2_origin
