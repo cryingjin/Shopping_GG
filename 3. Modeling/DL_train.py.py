@@ -121,8 +121,11 @@ def DataLoad_DL(data_dir):
     X_num = X_num.fillna(0)
 
 
-    return X_num, X_emb, y
+    return X, X_num, X_emb, y
 
+def mean_absolute_percentage_error(y_true, y_pred):
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
 
 def parse_args():
 
@@ -135,11 +138,14 @@ def parse_args():
 
 def main():
 
+    preds = {'val_preds' : [], 'test_preds' : []} 
+    mape = {'val_mape' : [], 'test_mape' : []} 
+
     args = ap.parse_args()
     if args is None:
       exit()
 
-    X_num, X_emb, y = DataLoad_DL(arg.data_dir)
+    X, X_num, X_emb, y = DataLoad_DL(arg.data_dir)
     model = DL_model(X_num,X_emb)
 
     opt = Adam(lr=0.0001, decay=1e-3 / 200)
@@ -163,11 +169,11 @@ def main():
         test_num = X_num.loc[test_idx]
         test_emb = X_emb.loc[test_idx]
 
-        X_val_num = test_num.loc[((test_num['방송일'] > 0) & (test_num['방송일'] <15))]
+        X_val_num = test_num.loc[((X['방송일'] > 0) & (X['방송일'] <15))]
         X_val_emb = test_emb.loc[X_val_num.index]
         y_val = y.loc[X_val_num.index]
 
-        X_test_num = test_num.loc[((test_num['방송일'] > 16) & (test_num['방송일'] < 32))]
+        X_test_num = test_num.loc[((X['방송일'] > 16) & (X['방송일'] < 32))]
         X_test_emb = test_emb.loc[X_test_num.index]
         y_test = y.loc[X_test_num.index]
 
@@ -216,8 +222,6 @@ def main():
                 print(f'{m}월\t', '[val]:', arg[0], '\t[test]', arg[1])
 
         model.save(arg.model_dir) 
-
-
 
 
 if __name__ == '__main__':
