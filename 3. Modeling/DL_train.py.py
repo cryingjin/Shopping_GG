@@ -104,6 +104,7 @@ def DataLoad_DL(data_dir):
     
     X = data['X']
     y = data['y'] 
+    y = np.log(y)
 
     column_list =[]
     for col in X.columns:
