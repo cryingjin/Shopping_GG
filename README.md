@@ -12,6 +12,14 @@
 |LSTM&CNN-MLP| |[link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb)|
 |MultiLSTM&CNN-MLP|4|[link]([link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb))|
 
+## 0925
+
+version2_origin
+![image](https://user-images.githubusercontent.com/41895063/94230846-cd428c80-ff3d-11ea-8fed-dbb6c5df88cd.png)
+
+![image](https://user-images.githubusercontent.com/41895063/94230780-a6845600-ff3d-11ea-93ce-d6e968ecc084.png)
+
+
 ## 0917
 #### Feature 안줄인 ver batch_size = 128, epoch = 500 earlystopping = 20 val_loss = 129.04905279477438(망한거)
 ![image](https://user-images.githubusercontent.com/41895063/93476771-1dfe2800-f935-11ea-944d-b53a781d5bda.png)
