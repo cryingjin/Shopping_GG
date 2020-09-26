@@ -114,3 +114,10 @@ if __name__ == '__main__':
             print("Step: {},         Loss: {}".format(global_step.numpy(),
                                             loss(x_inp, reconstruction).numpy()))
 
+    encoded_num = autoencoder.encoder(np.asarray(X)).numpy()
+    decoded_num = autoencoder.decoder(encoded_num).numpy()
+
+    
+    X_en = pd.DataFrame(decoded_num)
+
+    X_en.to_excel("X_encoded.xlsx")
