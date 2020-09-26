@@ -3,10 +3,10 @@ import numpy as np
 import pandas as pd
 import re
 #import MeCab
-from konlpy.tag import *
+# from konlpy.tag import *
 from gensim.models import Word2Vec, fasttext
 import matplotlib.pyplot as plt
-from eunjeon import Mecab
+#from eunjeon import Mecab
 #shell -> pip install eunjeon --user
 
 def make_corpus_our(df):
@@ -29,7 +29,7 @@ def make_corpus_our(df):
         if len(tmp) != 0:
             result_list.append(tmp)
     return result_list
-
+"""
 def make_corpus_M(df):
     tag_N = ["NNG", "NNP", "NNB", " NNBC", "NR", "NP","SL","SN"]
     tagger = Mecab()
@@ -41,3 +41,4 @@ def make_corpus_M(df):
         except :
             pass
     return corpus
+    """

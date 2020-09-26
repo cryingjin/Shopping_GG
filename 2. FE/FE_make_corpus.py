@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import re
 #import MeCab
-from konlpy.tag import *
+# from konlpy.tag import *
 from gensim.models import Word2Vec, fasttext
 import matplotlib.pyplot as plt
 #from eunjeon import Mecab

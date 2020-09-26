@@ -6,6 +6,8 @@ import gc
 import joblib
 import FE_innData as FEin
 import FE_extData as FEex
+import FE_make_corpus as MC 
+import FE_NLP
 import numpy as np
 import pandas as pd
 import argparse
@@ -13,7 +15,7 @@ from tqdm import tqdm
 from datetime import datetime
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--embedding', required = True)
+# parser.add_argument('--embedding', required = True)
 parser.add_argument('--dataset', required = True)
 args = parser.parse_args()
 
@@ -22,7 +24,7 @@ print('========== Start Feature Engineering ==========')
 print(f'{args.dataset} Data Load.....')
 
 if args.dataset == 'train':
-    sale = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', '2020 빅콘테스트 데이터분석분야-챔피언리그_2019년 실적데이터_v1_200818.xlsx'), skiprows = 1)
+    sale = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', '2020 빅콘테스트 데이터분석분야-챔피언리그_2019년 실적데이터_v1_200818.xlsx'), skiprows = 1)
 elif args.dataset == 'test':
     sale = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', '2020 빅콘테스트 데이터분석분야-챔피언리그_2020년 6월 판매실적예측데이터(평가데이터).xlsx'), skiprows = 1)
 else:
@@ -43,7 +45,23 @@ sale = FEin.engineering_timeSeries(sale, args.dataset)
 
 # 임베딩 데이터 FE
 print('emb Feature enginnering.....')
-emb = pd.read_excel(os.path.join('..', '..', '0.Data', '04_임베딩데이터', f'{args.embedding}.xlsx'), index_col = 0)
+
+if args.dataset == 'train':
+    meta = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
+elif args.dataset == 'test':
+    meta_train = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
+    meta_test = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', 'train수작업_meta.xlsx'))
+    meta = pd.concat([meta_train, meta_test], axis = 0)
+else:
+    print('dataset error.....')
+
+meta = meta.drop_duplicates('NEW상품명')[['NEW상품명', '브랜드', '상품명다시', '단위']]
+
+corpus_our = MC.make_corpus_our(meta)
+FE_NLP_our = FE_NLP.FE_W2V(meta, corpus_our)
+FE_NLP_our.W2V()
+emb = FE_NLP_our.product_name_embedding_ver4()
+
 sale = sale.merge(emb.drop_duplicates(), on = 'NEW상품명', how = 'left')
 
 del emb
