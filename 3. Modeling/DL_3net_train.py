@@ -31,18 +31,23 @@ from utils import *
 
 
 
+
 def DL_model(X_num,X_emb):
 
-    def create_mlp(dim):
+    
+    def create_mlp(dim, regress=False):
         # define our MLP network
         model = Sequential()
         model.add(Dense(64, input_dim=dim, activation ='relu', kernel_initializer='he_normal'))
+        model.add(Dense(64, input_dim=dim, activation ='relu', kernel_initializer='he_normal'))
         model.add(BatchNormalization())
         model.add(Dropout(0.3))
-        model.add(Dense(32, activation ='relu', kernel_initializer='he_normal'))
+        model.add(Dense(16, activation ='relu', kernel_initializer='he_normal'))
+        model.add(Dense(16, activation ='relu', kernel_initializer='he_normal'))
         model.add(BatchNormalization())
         model.add(Dropout(0.3))
-        model.add(Dense(10, activation ='relu', kernel_initializer='he_normal'))   
+        model.add(Dense(4, activation ='relu', kernel_initializer='he_normal')) 
+        model.add(Dense(4, activation ='relu', kernel_initializer='he_normal')) 
         return model
 
     def create_1Dcnn(dim):
@@ -71,15 +76,12 @@ def DL_model(X_num,X_emb):
 
     def create_lstm(dim):
         inputShape = (dim,1)
-        
         inputs = Input(shape = inputShape)
-        print(inputs.shape)
+
         
         x = LSTM(20, return_sequences=True, kernel_initializer='he_normal')(inputs)
-        x = BatchNormalization()(x)
         x = Dropout(0.2)(x)
         x = LSTM(10, kernel_initializer='he_normal')(x)
-        x = BatchNormalization()(x)
         x = Dropout(0.2)(x)
         x = Dense(10,activation ='relu', kernel_initializer='he_normal')(x)
         model = Model(inputs,x)
@@ -145,28 +147,26 @@ def DataLoad_DL(data_dir,timeseries_list_dir):
     return X, X_num, X_emb, X_time, y
 
 
-def parse_args():
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--data_dir', type=str, default='./train_FE.pkl')
-    parser.add_argument('--model_dir', type=str, default='./model_3multiNet.h5',
-                        help='Directory name to save the checkpoints')
-    parser.add_argument('--timeS_dir', type=str, default='./timeseries_list.pkl',
-                        help='Directory name to save the checkpoints')
-                        
-    return check_args(parser.parse_args())
 
 def main():
 
     preds = {'val_preds' : [], 'test_preds' : []} 
     mape = {'val_mape' : [], 'test_mape' : []} 
+    
+    parser = argparse.ArgumentParser()
 
-    args = ap.parse_args()
+    parser.add_argument('--data_dir', type=str, default='./train_FE.pkl')
+    parser.add_argument('--batch_size', type=str, default=256)
+    parser.add_argument('--model_dir', type=str, default='./model_3multiNet.h5',
+                        help='Directory name to save the checkpoints')
+    parser.add_argument('--timeS_dir', type=str, default='./timeseries_list.pkl',
+                        help='Directory name to save the checkpoints')
+    args = parser.parse_args()
+
     if args is None:
       exit()
 
-    X, X_num, X_emb, y = DataLoad_DL(arg.data_dir,timeS_dir)
+    X, X_num, X_emb, y = DataLoad_DL(arg.data_dir, arg.timeS_dir)
     model = DL_model(X_num,X_emb)
 
     opt = Adam(lr=0.0001, decay=1e-3 / 200)
@@ -239,17 +239,11 @@ def main():
         model.fit(
         x=[X_train_num, X_train_emb, X_train_time], y=y_train,
         validation_data=([X_val_num, X_val_emb,X_val_time], y_val),
-        epochs=2000, batch_size = 256,
+        epochs=2000, batch_size = arg.batch_size,
         callbacks = [reduceLR,earlystopping])
 
         y_pred = model.predict([X_test_num, X_test_emb,X_test_time])
         val_pred = model.predict([X_val_num, X_val_emb, X_val_time])
-        """
-        preds['val_preds'].append(val_pred)
-        preds['test_preds'].append(y_pred)
-        mape['val_mape'].append(mean_absolute_percentage_error(y_val, val_pred))
-        mape['test_mape'].append(mean_absolute_percentage_error(y_test,y_pred))
-        """
 
         preds['val_preds'].append(np.exp(val_pred))
         preds['test_preds'].append(np.exp(y_pred))
