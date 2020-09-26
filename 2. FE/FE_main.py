@@ -7,7 +7,7 @@ import joblib
 import FE_innData as FEin
 import FE_extData as FEex
 import FE_make_corpus as MC 
-import FE_NLP_ours as FE_NLP
+import FE_NLP
 import numpy as np
 import pandas as pd
 import argparse

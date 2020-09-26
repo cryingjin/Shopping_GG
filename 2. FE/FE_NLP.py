@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import re
 #import MeCab
-from konlpy.tag import *
+#from konlpy.tag import *
 from gensim.models import Word2Vec, fasttext
 import matplotlib.pyplot as plt
 from eunjeon import Mecab
@@ -11,8 +11,8 @@ from eunjeon import Mecab
 class FE_W2V:
     def __init__(self, df, corpus, dim = 10, win = 3, min_cnt = 1):
         self.df = df
-        self.tagger = Mecab()
-        self.tag_N = ["NNG", "NNP", "NNB", " NNBC", "NR", "NP","SL","SN"]
+        #self.tagger = Mecab()
+        #self.tag_N = ["NNG", "NNP", "NNB", " NNBC", "NR", "NP","SL","SN"]
         self.corpus = corpus
         self.dim = dim
         self.win = win
@@ -38,7 +38,7 @@ class FE_W2V:
         for a in aa:
             rows.append(np.pad(a, (0, fixed_length), 'constant', constant_values=padding_value)[:fixed_length])
         return np.concatenate(rows, axis=0).reshape(-1, fixed_length)
-    
+    """
     def product_name_embedding_ver1(self, df_name = None):
     #using MeCab(), Just Concatenate, zero-padding (right)
         df_ver1 = df_name if df_name is not None else self.df
@@ -161,6 +161,7 @@ class FE_W2V:
         #print(len(vector_df), len(df_name_tmp), len(vector_df), len(df_ver3))
 
         return vector_df
+    """
 
     def product_name_embedding_ver4(self, df_name = None):
     #using our corpus, product name embedding = mean of tocken vectors
