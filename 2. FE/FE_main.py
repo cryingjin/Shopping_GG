@@ -65,7 +65,7 @@ if args.dataset == 'train':
     dust_2019 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '2019_dust.csv'), encoding = 'cp949')
     dust_2020 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '2020_dust.csv'), encoding = 'cp949')
     df_dust = pd.concat([dust_2019, dust_2020], axis = 0)
-    df_dust = FEex.preprocessing_dust(df_dust)
+    df_dust = FEex.preprocessing_dust(df_dust, args.dataset)
 elif args.dataset == 'test':
     df_dust = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '2020_dust', '2020년 6월.xlsx'))
 
@@ -111,8 +111,16 @@ if args.dataset == 'train':
     # 주문이 0인, 취급액이 0인 데이터 제외함
     data = data.loc[data['취급액'].notnull()]
     y = data['취급액']
+    
+    label4WnD = data['마더코드']
     drop_data = data[drop_columns]
     data = data.drop(drop_columns, axis = 1)
+    
+    joblib.dump({
+        'X' : data,
+        'label' : label4WnD
+    },
+        os.path.join('..', '..', '0.Data', '05_분석데이터', 'train_data4WnD.pkl'))
     
     X = pd.get_dummies(data)
     print('Complete Data preprocessing!')
@@ -126,7 +134,14 @@ if args.dataset == 'train':
 elif args.dataset == 'test':
     drop_columns.remove('판매량')
     drop_data = data[drop_columns]
+    label4WnD = data['마더코드']
     data = data.drop(drop_columns, axis = 1)
+    
+    joblib.dump({
+        'X' : data,
+        'label' : label4WnD
+    },
+        os.path.join('..', '..', '0.Data', '05_분석데이터', 'test_data4WnD.pkl'))
     
     X = pd.get_dummies(data)
     
