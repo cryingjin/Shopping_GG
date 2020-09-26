@@ -212,7 +212,7 @@ def main():
         for m, arg in enumerate(zip(mape['val_mape'], mape['test_mape']), 1):
                 print(f'{m}월\t', '[val]:', arg[0], '\t[test]', arg[1])
     
-    model.save('DL_model_test.h5') 
+    model.save('DL_model.h5') 
 
 
 if __name__ == '__main__':
