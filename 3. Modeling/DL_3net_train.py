@@ -166,7 +166,7 @@ def main():
     if args is None:
       exit()
 
-    X, X_num, X_emb, y = DataLoad_DL(arg.data_dir, arg.timeS_dir)
+    X, X_num, X_emb, X_time, y = DataLoad_DL(arg.data_dir, arg.timeS_dir)
     model = DL_model(X_num,X_emb)
 
     opt = Adam(lr=0.0001, decay=1e-3 / 200)
