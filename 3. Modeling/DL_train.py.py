@@ -128,10 +128,9 @@ def main():
     mape = {'val_mape' : [], 'test_mape' : []} 
 
     parser = argparse.ArgumentParser()
-    # parser.add_argument('--embedding', required = True)
     parser.add_argument('--data_dir', type=str, default='./train_FE.pkl')
-    parser.add_argument('--model_dir', type=str, default='./mj.h5',
-                        help='Directory name to save the checkpoints')
+    parser.add_argument('--epoch', type=int, default=4000)
+    parser.add_argument('--batch_size', type=int, default=256)
     arg = parser.parse_args()
 
 
@@ -144,6 +143,8 @@ def main():
     
     reduceLR = ReduceLROnPlateau(monitor='loss', factor=0.5, patience=30)
     earlystopping = EarlyStopping(monitor='loss',patience= 100)
+    epoch = arg.epoch 
+    batch_size = arg.batch_size
     
     for i in range(1,13):
         print('처리중인 월:',i)
@@ -198,7 +199,7 @@ def main():
         model.fit(
         x=[X_train_num, X_train_emb], y=y_train,
         validation_data=([X_val_num, X_val_emb], y_val),
-        epochs=4000, batch_size = 1024,
+        epochs=epoch, batch_size = batch_size,
         callbacks = [reduceLR,earlystopping])
 
         y_pred = model.predict([X_test_num, X_test_emb])
@@ -210,8 +211,8 @@ def main():
 
         for m, arg in enumerate(zip(mape['val_mape'], mape['test_mape']), 1):
                 print(f'{m}월\t', '[val]:', arg[0], '\t[test]', arg[1])
-
-        model.save(arg.model_dir) 
+    
+    model.save('DL_model_test.h5') 
 
 
 if __name__ == '__main__':
