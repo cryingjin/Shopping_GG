@@ -1,4 +1,3 @@
-
 from __future__ import division
 import joblib
 import argparse
@@ -22,10 +21,6 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.layers import concatenate
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
-
-from ops import *
-from utils import *
-
 
 
 
@@ -126,23 +121,19 @@ def mean_absolute_percentage_error(y_true, y_pred):
     y_true, y_pred = np.array(y_true), np.array(y_pred)
     return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
 
-def parse_args():
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--data_dir', type=str, default='./train_FE.pkl')
-    parser.add_argument('--model_dir', type=str, default='./model.h5',
-                        help='Directory name to save the checkpoints')
-    return check_args(parser.parse_args())
 
 def main():
 
     preds = {'val_preds' : [], 'test_preds' : []} 
     mape = {'val_mape' : [], 'test_mape' : []} 
 
-    args = ap.parse_args()
-    if args is None:
-      exit()
+    parser = argparse.ArgumentParser()
+    # parser.add_argument('--embedding', required = True)
+    parser.add_argument('--data_dir', type=str, default='./train_FE.pkl')
+    parser.add_argument('--model_dir', type=str, default='./mj.h5',
+                        help='Directory name to save the checkpoints')
+    arg = parser.parse_args()
+
 
     X, X_num, X_emb, y = DataLoad_DL(arg.data_dir)
     model = DL_model(X_num,X_emb)
@@ -225,4 +216,3 @@ def main():
 
 if __name__ == '__main__':
     main()
- 
