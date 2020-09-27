@@ -14,6 +14,8 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 from tensorflow.keras import layers, losses
 import numpy as np
+import warnings
+warnings.filterwarnings(action='ignore')
 
 #(82x1133)
 #57
@@ -120,8 +122,7 @@ if __name__ == '__main__':
     X_en = pd.DataFrame(decoded_num)
 
     if data_type == 'log':
-        save_path = save_dir + "logX_encoded.xlsx"
+        save_path = os.path.join(save_dir,"logX_encoded.xlsx")
     else : 
-        save_path = save_dir + "X_encoded.xlsx"
-
+        save_path = save_path = os.path.join(save_dir,"X_encoded.xlsx")
     X_en.to_excel(save_path)
