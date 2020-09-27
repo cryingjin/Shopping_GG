@@ -76,9 +76,12 @@ if __name__ == '__main__':
                         help='Directory name to load the user item matrix')
     parser.add_argument('--data_type', type=str, default='log',
                         help='log or origin')
+    parser.add_argument('--save_dir', type=str, default=os.path.join( '..', 'data', '04_임시데이터'),
+                        help='log or origin')
     args = parser.parse_args()
     data_dir = args.data_dir
     data_type = args.data_type
+    save_dir = args.save_dir
 
     data = joblib.load(data_dir)
     locals().update(data)
@@ -117,4 +120,9 @@ if __name__ == '__main__':
     
     X_en = pd.DataFrame(decoded_num)
 
-    X_en.to_excel("X_encoded.xlsx")
+    if data_type == 'log':
+        save_path = save_dir + "logX_encoded.xlsx"
+    else : 
+        save_path = save_dir + "X_encoded.xlsx"
+
+    X_en.to_excel(save_path))
