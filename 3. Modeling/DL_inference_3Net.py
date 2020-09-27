@@ -44,7 +44,7 @@ def main():
     arg = parser.parse_args()
 
 
-    X, X_num, X_emb, X_time, y = DataLoad_DL(arg.data_dir, arg.timeS_dir)
+    X_num, X_emb, X_time = DataLoad_DL(arg.data_dir, arg.timeS_dir)
     # 2. Model 불러오기
 
     model = load_model(arg.model_dir)
