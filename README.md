@@ -5,9 +5,19 @@
 |:---:|:---|:---|
 |corpus_ours|list|[download link](https://drive.google.com/file/d/1SdiuAOdOgHCuuYHPKkGWq3M5W406B-2N/view?usp=sharing)|
 
+
+
+## Model (.h5)
+|model|Result(val loss)|Link|
+|:---:|:---|:---|
+|original version|total|-|
+|3Net|total |-|
+|3Net 0926|total|-|
+
 ## Model
 |model|Result(val loss)|Link|
 |:---:|:---|:---|
+|3 multi input Net|total 71|-|
 |MLP&CNN-MLP|4|[link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb)|
 |LSTM&CNN-MLP| |[link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb)|
 |MultiLSTM&CNN-MLP|4|[link]([link](https://github.com/cryingjin/Shopping_GG/blob/minjung/DLmodel/MLP_CNN_MLP(version1).ipynb))|
