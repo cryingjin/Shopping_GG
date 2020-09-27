@@ -176,7 +176,7 @@ def engineering_DatePrice(df, dataset):
     df['방송년도'] = df['방송일시'].dt.year
     df['방송월'] = df['방송일시'].dt.month
     df['방송일'] = df['방송일시'].dt.day
-    df['방송시간(시간)'] = df['방송일시'].dt.hour.apply(lambda x : 24 if x == 0 else x)
+    df['방송시간(시간)'] = df['방송일시'].dt.hour
     df['방송시간(분)'] = df['방송일시'].dt.minute
     
     if dataset == 'train':
