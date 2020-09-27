@@ -4,8 +4,16 @@ from tensorflow.keras import layers
 import pandas as pd
 import numpy as np
 import argparse
+import joblib
+import os
 from sklearn.model_selection import train_test_split
 
+
+#(82x1133)
+#57
+import tensorflow as tf
+from tensorflow.keras import layers, losses
+import numpy as np
 
 #(82x1133)
 #57
@@ -16,34 +24,11 @@ class AutoEncoder(tf.keras.Model):
         self.latent_dim = latent_dim
         self.X_size = X_size
         self.encoder = tf.keras.Sequential([
-            layers.Dense(512, activation = 'selu', kernel_initializer='he_normal'),
-            layers.Dense(512, activation = 'selu', kernel_initializer='he_normal'),
-            
+            layers.Dense(latent_dim, activation = 'selu'),
             layers.BatchNormalization(),
-            layers.Dropout(0.2),
-            layers.Dense(256, activation = 'selu', kernel_initializer='he_normal'),
-            layers.Dense(256, activation = 'selu', kernel_initializer='he_normal'),
-            layers.BatchNormalization(),
-            layers.Dropout(0.2),
-            layers.Dense(128, activation = 'selu', kernel_initializer='he_normal'),
-            layers.Dense(128, activation = 'selu', kernel_initializer='he_normal'),
-            layers.BatchNormalization(),
-            layers.Dropout(0.2),
-            layers.Dense(latent_dim, activation = 'selu')
+            layers.Dropout(0.2)
         ])
         self.decoder = tf.keras.Sequential([
-            layers.Dense(128, activation = 'selu', kernel_initializer='he_normal'),
-            layers.Dense(128, activation = 'selu', kernel_initializer='he_normal'),
-            layers.BatchNormalization(),
-            layers.Dropout(0.2),
-            layers.Dense(256, activation = 'selu', kernel_initializer='he_normal'),
-            layers.Dense(256, activation = 'selu', kernel_initializer='he_normal'),
-            layers.BatchNormalization(),
-            layers.Dropout(0.2),
-            layers.Dense(512, activation = 'selu', kernel_initializer='he_normal'),
-            layers.Dense(512, activation = 'selu', kernel_initializer='he_normal'),
-            layers.BatchNormalization(),
-            layers.Dropout(0.2),
             layers.Dense(X_size,activation = 'selu')
         ])
     
@@ -51,6 +36,8 @@ class AutoEncoder(tf.keras.Model):
         encoded = self.encoder(x)
         decoded = self.decoder(encoded)
         return decoded
+
+
 def masked_mse(y_true, y_pred):
     # masked function
     mask_true = K.cast(K.not_equal(y_true, 0), K.floatx())
@@ -84,12 +71,23 @@ def grad(model, inputs, targets):
 
 if __name__ == '__main__':
 
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--dir",  type=str, default="./Rec_user_item_matrix2.xlsx",help="input data path")
-    args = ap.parse_args()
-    data_dir = args.dir
-    data = pd.read_excel(data_dir)
-    X = data.iloc[:,1:]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_dir', type=str, default=os.path.join( '..', 'data', '04_임시데이터', 'user_item_matrix.pkl'),
+                        help='Directory name to load the user item matrix')
+    parser.add_argument('--data_type', type=str, default='log',
+                        help='log or origin')
+    args = parser.parse_args()
+    data_dir = args.data_dir
+    data_type = args.data_type
+
+    data = joblib.load(data_dir)
+    locals().update(data)
+    logdf = (logdf + 1).fillna(0)
+    df = (df + 1).fillna(0)
+    if data_type == 'log':
+        X = logdf
+    else : 
+        X = df
 
     x_train, x_test, _, _ = train_test_split(np.asarray(X),np.asarray(X),test_size=0.1,shuffle=False,random_state=1004)
 
@@ -99,7 +97,7 @@ if __name__ == '__main__':
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
     global_step = tf.Variable(0)
 
-    num_epochs = 1000
+    num_epochs = 500
     batch_size = 4
 
     for epoch in range(num_epochs):
@@ -114,9 +112,8 @@ if __name__ == '__main__':
             print("Step: {},         Loss: {}".format(global_step.numpy(),
                                             loss(x_inp, reconstruction).numpy()))
 
-    encoded_num = autoencoder.encoder(np.asarray(X)).numpy()
-    decoded_num = autoencoder.decoder(encoded_num).numpy()
-
+    encoded_num = model.encoder(np.asarray(X)).numpy()
+    decoded_num = model.decoder(encoded_num).numpy()
     
     X_en = pd.DataFrame(decoded_num)
 
