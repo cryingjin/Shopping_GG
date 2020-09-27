@@ -25,7 +25,7 @@ def engineering_data(df, dataset):
         meta_train = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
         meta_test = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', 'test수작업_meta.xlsx'))
         meta = pd.concat([meta_train, meta_test], axis = 0)
-        
+        meta = meta.loc[meta['상품군'] != '무형'].drop_duplicates('상품코드')
         df = df.merge(meta[['상품코드', 'NEW상품명', '브랜드', '결제방법', '상품명다시', '단위', '모델명', '성별', 'NS카테고리', '옵션']], on = '상품코드', how = 'left')
         item = meta[['NEW상품명', '상품군']].drop_duplicates().reset_index(drop = True).reset_index().rename(columns = {'index' : 'NEW상품코드'})
     else:
@@ -61,7 +61,7 @@ def engineering_data(df, dataset):
     item['전체_가격대'] = item['NEW_최고판매단가'].apply(lambda x : '저가' if x <= 59000 else ('중저가' if 59000 < x <= 109900 else ('고가' if 109900 < x < 509000 else '초고가')))
     
     # 상품군 내 가격대 [상품군_가격대]
-    item.to_excel('./item.xlsx', index = False)
+#     item.to_excel('./item.xlsx', index = False)
     for c in item['상품군'].unique():
         if c == '무형':
             continue
@@ -94,6 +94,7 @@ def engineering_data(df, dataset):
     
     # NEW아이템 가격 집계 merge
     df = df.merge(item.drop('상품군', axis = 1), on = 'NEW상품명', how = 'left')
+    
     
     # 상푼군 가격 집계 merge
     df = df.merge(itemcategory, on = '상품군', how = 'left')
@@ -239,7 +240,7 @@ def engineering_order(df, dataset):
     # 방송날짜별 상품군별 취급액 계산
     df['방송날'] = df['방송일시'].dt.date    
     df['방송년도'] = df['방송일시'].dt.year
-    df['방송월'] = df['방송일시'].dt.month
+#     df['방송월'] = df['방송일시'].dt.month
     df['방송시간(시간)'] = df['방송일시'].dt.hour
     df['방송시간(분)'] = df['방송일시'].dt.minute
     if dataset == 'train':

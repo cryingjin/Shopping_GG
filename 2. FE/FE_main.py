@@ -27,6 +27,7 @@ if args.dataset == 'train':
     sale = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', '2020 빅콘테스트 데이터분석분야-챔피언리그_2019년 실적데이터_v1_200818.xlsx'), skiprows = 1)
 elif args.dataset == 'test':
     sale = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', '2020 빅콘테스트 데이터분석분야-챔피언리그_2020년 6월 판매실적예측데이터(평가데이터).xlsx'), skiprows = 1)
+    test_index = sale.index
 else:
     print('dataset error.....')
 
@@ -35,9 +36,13 @@ else:
 # 기본 데이터 FE
 print('Inner Feature enginnering.....')
 sale = FEin.engineering_data(sale, args.dataset)
+
 sale = FEin.engineering_TimeDiff(sale)
+
 sale = FEin.engineering_DatePrice(sale, args.dataset)
+
 sale = FEin.engineering_order(sale, args.dataset)
+
 
 # 시계열 데이터 FE
 print('Time Feature enginnering.....')
@@ -46,15 +51,12 @@ sale = FEin.engineering_timeSeries(sale, args.dataset)
 # 임베딩 데이터 FE
 print('emb Feature enginnering.....')
 
-if args.dataset == 'train':
-    meta = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
-elif args.dataset == 'test':
-    meta_train = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
-    meta_test = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', 'train수작업_meta.xlsx'))
-    meta = pd.concat([meta_train, meta_test], axis = 0)
-else:
-    print('dataset error.....')
-
+# if args.dataset == 'train':
+#     meta = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
+# elif args.dataset == 'test':
+meta_train = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
+meta_test = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', 'test수작업_meta.xlsx'))
+meta = pd.concat([meta_train, meta_test], axis = 0)
 meta = meta.drop_duplicates('NEW상품명')[['NEW상품명', '브랜드', '상품명다시', '단위']]
 
 corpus_our = MC.make_corpus_our(meta)
@@ -63,7 +65,6 @@ FE_NLP_our.W2V()
 emb = FE_NLP_our.product_name_embedding_ver4()
 
 sale = sale.merge(emb.drop_duplicates(), on = 'NEW상품명', how = 'left')
-
 del emb
 gc.collect()
 # print('Complete emb Feature enginnering!')
@@ -123,6 +124,7 @@ drop_columns = [
 data[categorys] = data[categorys].astype(str)
 # 예측 상품 중 판매가 0인 프로그램 실적은 예측에서 제외함 -> 무형 제외
 data = data.loc[data['상품군'] != '무형']
+
 today = datetime.today().strftime('%Y%m%d%H%M')
 
 if args.dataset == 'train':
@@ -130,7 +132,7 @@ if args.dataset == 'train':
     data = data.loc[data['취급액'].notnull()]
     y = data['취급액']
     
-    label4WnD = data['마더코드']
+    label4WnD = data['상품군']
     drop_data = data[drop_columns]
     data = data.drop(drop_columns, axis = 1)
     
@@ -152,8 +154,9 @@ if args.dataset == 'train':
 elif args.dataset == 'test':
     drop_columns.remove('판매량')
     drop_data = data[drop_columns]
-    label4WnD = data['마더코드']
+    label4WnD = data['상품군']
     data = data.drop(drop_columns, axis = 1)
+    test_index = data.index
     
     joblib.dump({
         'X' : data,
@@ -175,6 +178,7 @@ elif args.dataset == 'test':
     print('Data saving.....')
     joblib.dump({
         'X' : X,
+        'idx' : test_index
     }, os.path.join('..', '..', '0.Data', '05_분석데이터', 'test_FE.pkl'))
     print('Test Data saved!')
     
