@@ -104,7 +104,6 @@ if __name__ == '__main__':
     batch_size = 4
 
     for epoch in range(num_epochs):
-        print("Epoch: ", epoch)
         for x in range(0, len(x_train), batch_size):
             x_inp = x_train[x : x + batch_size]
             loss_value, grads, reconstruction = grad(model, x_inp, x_inp)
@@ -125,4 +124,4 @@ if __name__ == '__main__':
     else : 
         save_path = save_dir + "X_encoded.xlsx"
 
-    X_en.to_excel(save_path))
+    X_en.to_excel(save_path)
