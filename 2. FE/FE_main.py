@@ -15,7 +15,6 @@ from tqdm import tqdm
 from datetime import datetime
 
 parser = argparse.ArgumentParser()
-# parser.add_argument('--embedding', required = True)
 parser.add_argument('--dataset', required = True)
 args = parser.parse_args()
 
