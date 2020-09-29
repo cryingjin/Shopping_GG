@@ -1,5 +1,7 @@
 # 쇼핑광고등어_코드설명
 
+[결과보고서](https://drive.google.com/file/d/11mZn7tsR0U7DvrMJ-D19wSfBRIyI9or5/view?usp=sharing)
+
 # 쇼핑광고등어 코드설명 README 파일
 
 - 재현가능한 코드들과 제출 파일들의 설명을 담고 있는 README 파일입니다.
