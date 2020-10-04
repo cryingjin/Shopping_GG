@@ -20,13 +20,15 @@ def engineering_data(df, dataset):
         meta = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
         df = df.merge(meta[['상품코드', 'NEW상품명', '브랜드', '결제방법', '상품명다시', '단위', '모델명', '성별', 'NS카테고리', '옵션']], on = '상품코드', how = 'left')
         item = meta[['NEW상품명', '상품군']].drop_duplicates().reset_index(drop = True).reset_index().rename(columns = {'index' : 'NEW상품코드'})
-    elif dataset == 'test':
+    elif dataset == 'test' or dataset == 'recommend':
         # 수작업 데이터 불러오기 (2019 제공데이터를 가지고 수작업 한 파일 + 2020 평가데이터를 가지고 수작업 한 파일)
         meta_train = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
         meta_test = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', 'test수작업_meta.xlsx'))
         meta = pd.concat([meta_train, meta_test], axis = 0)
         meta = meta.loc[meta['상품군'] != '무형'].drop_duplicates('상품코드')
-        df = df.merge(meta[['상품코드', 'NEW상품명', '브랜드', '결제방법', '상품명다시', '단위', '모델명', '성별', 'NS카테고리', '옵션']], on = '상품코드', how = 'left')
+        
+        if dataset == 'test':
+            df = df.merge(meta[['상품코드', 'NEW상품명', '브랜드', '결제방법', '상품명다시', '단위', '모델명', '성별', 'NS카테고리', '옵션']], on = '상품코드', how = 'left')
         item = meta[['NEW상품명', '상품군']].drop_duplicates().reset_index(drop = True).reset_index().rename(columns = {'index' : 'NEW상품코드'})
     else:
         print('dataset error.....')
@@ -141,6 +143,9 @@ def engineering_TimeDiff(df) :
     df['옵션'] = df['옵션'].fillna(0)
     df['옵션여부'] = df['옵션'].apply(lambda x : 1 if x != 0 else 0)
     
+    # 무형 상품군 NEW상품명 채워주기(무형 상품군은 어짜피 나중에 버릴것)
+    df.loc[df['NEW상품명'].isnull(), 'NEW상품명'] = df.loc[df['NEW상품명'].isnull(), '상품명']
+    
     return df
 
 
@@ -156,17 +161,13 @@ def engineering_DatePrice(df, dataset):
         holidays['locdate'] = holidays['locdate'].astype(str).apply(lambda x : '-'.join([x[:4], x[4:6], x[6:]]))
         return holidays
     
-    # 무형 상품군 NEW상품명 채워주기(무형 상품군은 어짜피 나중에 버릴것)
-    df.loc[df['NEW상품명'].isnull(), 'NEW상품명'] = df.loc[df['NEW상품명'].isnull(), '상품명']
-    
     ## [공휴일여부]
     try:
         if dataset == 'train':
             year = 2019
         elif dataset == 'test':
             year = 2020
-        else:
-            print('dataset error.....')
+
         holidays = getHoliday(year)
     except:
         holidays = pd.read_excel(os.path.join('..', '..', '0.Data', '03_외부데이터', '특일정보.xlsx'))
@@ -177,7 +178,7 @@ def engineering_DatePrice(df, dataset):
     df['방송년도'] = df['방송일시'].dt.year
     df['방송월'] = df['방송일시'].dt.month
     df['방송일'] = df['방송일시'].dt.day
-    df['방송시간(시간)'] = df['방송일시'].dt.hour.apply(lambda x : 24 if x == 0 else x)
+    df['방송시간(시간)'] = df['방송일시'].dt.hour
     df['방송시간(분)'] = df['방송일시'].dt.minute
     
     if dataset == 'train':
@@ -207,6 +208,8 @@ def engineering_DatePrice(df, dataset):
                              ('3분기' if 7 <= x <= 9 else 
                               ('4분기' if 10 <= x <= 12 else x))))
     
+    if dataset == 'recommend':
+        return df
     ## [상품군] 평균 판매단가 - 해당 상품 판매단가
     df['상품군평균판매단가차이'] = df['상품군_평균판매단가'] - df['판매단가']
     
@@ -265,10 +268,10 @@ def engineering_order(df, dataset):
             'volume4hour' : temp_hour,
             'volume4minute' : temp_minute
         },
-            os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4volume.pkl'))
+            os.path.join('..', '..', '0.Data', '04_임시데이터', 'data4volume.pkl'))
         
-    elif dataset == 'test':
-        volume = joblib.load(os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4volume.pkl'))
+    elif dataset == 'test' or dataset == 'recommend':
+        volume = joblib.load(os.path.join('..', '..', '0.Data', '04_임시데이터', 'data4volume.pkl'))
         temp_month = volume['volume4month']
         temp_hour = volume['volume4hour']
         temp_minute = volume['volume4minute']
@@ -340,7 +343,7 @@ def engineering_timeSeries(df, dataset):
         joblib.dump(timeS,
                    os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4time.pkl'))
         
-    elif dataset == 'test':
+    elif dataset == 'test' or dataset == 'recommend':
         
         timeS = joblib.load(os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4time.pkl'))
         df['방송날'] = df['방송날'].apply(lambda x : x - relativedelta(years=1))

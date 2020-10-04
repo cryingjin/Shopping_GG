@@ -15,7 +15,6 @@ from tqdm import tqdm
 from datetime import datetime
 
 parser = argparse.ArgumentParser()
-# parser.add_argument('--embedding', required = True)
 parser.add_argument('--dataset', required = True)
 args = parser.parse_args()
 
@@ -28,6 +27,8 @@ if args.dataset == 'train':
 elif args.dataset == 'test':
     sale = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', '2020 빅콘테스트 데이터분석분야-챔피언리그_2020년 6월 판매실적예측데이터(평가데이터).xlsx'), skiprows = 1)
     test_index = sale.index
+elif args.dataset == 'recommend':
+    sale = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4recommend.xlsx'))
 else:
     print('dataset error.....')
 
@@ -80,7 +81,7 @@ df_wth = pd.concat([w_19, w_20], axis = 0)
 df_wth = FEex.preprocessing_weather(df_wth)
 
 # 미세먼지 데이터 FE
-if args.dataset == 'train':
+if args.dataset == 'train' or args.dataset == 'recommend':
     dust_2019 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '2019_dust.csv'), encoding = 'cp949')
     dust_2020 = pd.read_csv(os.path.join('..', '..', '0.Data', '03_외부데이터', '2020_dust.csv'), encoding = 'cp949')
     df_dust = pd.concat([dust_2019, dust_2020], axis = 0)
@@ -151,7 +152,7 @@ if args.dataset == 'train':
     }, os.path.join('..', '..', '0.Data', '05_분석데이터', 'train_FE.pkl'))
     print('Train Data saved!')
     
-elif args.dataset == 'test':
+elif args.dataset == 'test' or args.dataset == 'recommend':
     drop_columns.remove('판매량')
     drop_data = data[drop_columns]
     label4WnD = data['상품군']
@@ -176,11 +177,21 @@ elif args.dataset == 'test':
     
     print('Complete Data preprocessing!')
     print('Data saving.....')
-    joblib.dump({
-        'X' : X,
-        'idx' : test_index
-    }, os.path.join('..', '..', '0.Data', '05_분석데이터', 'test_FE.pkl'))
-    print('Test Data saved!')
+    if args.dataset == 'test':
+        
+        joblib.dump({
+            'X' : X,
+            'idx' : test_index
+        }, os.path.join('..', '..', '0.Data', '05_분석데이터', 'test_FE.pkl'))
+        print('Test Data saved!')
+        
+    else:
+        
+        joblib.dump({
+            'X' : X,
+            'idx' : test_index
+        }, os.path.join('..', '..', '0.Data', '05_분석데이터', 'Rec_FE.pkl'))
+        print('Recommend Data saved!')
     
 else:
     print('dataset error.....')

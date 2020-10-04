@@ -32,22 +32,30 @@ from utils import *
 
 
 
-def DL_model(X_num,X_emb):
+def DL_model(X_num,X_emb,X_time):
 
-    
-    def create_mlp(dim, regress=False):
+   
+    def create_mlp(dim):
         # define our MLP network
         model = Sequential()
-        model.add(Dense(64, input_dim=dim, activation ='relu', kernel_initializer='he_normal'))
-        model.add(Dense(64, input_dim=dim, activation ='relu', kernel_initializer='he_normal'))
+        model.add(Dense(64, input_dim=dim, activation ='relu'))
+        model.add(Dense(64, input_dim=dim, activation ='relu'))
         model.add(BatchNormalization())
         model.add(Dropout(0.3))
-        model.add(Dense(16, activation ='relu', kernel_initializer='he_normal'))
-        model.add(Dense(16, activation ='relu', kernel_initializer='he_normal'))
+        model.add(Dense(32, input_dim=dim, activation ='relu'))
+        model.add(Dense(32, input_dim=dim, activation ='relu'))
         model.add(BatchNormalization())
         model.add(Dropout(0.3))
-        model.add(Dense(4, activation ='relu', kernel_initializer='he_normal')) 
-        model.add(Dense(4, activation ='relu', kernel_initializer='he_normal')) 
+        model.add(Dense(16, activation ='relu'))
+        model.add(Dense(16, activation ='relu'))
+        model.add(BatchNormalization())
+        model.add(Dropout(0.3))
+        model.add(Dense(8, activation ='relu'))
+        model.add(Dense(8, activation ='relu'))
+        model.add(BatchNormalization())
+        model.add(Dropout(0.3))
+        model.add(Dense(4, activation ='relu')) 
+        model.add(Dense(4, activation ='relu')) 
         return model
 
     def create_1Dcnn(dim):
@@ -55,14 +63,14 @@ def DL_model(X_num,X_emb):
 
         Inputs = Input(shape = inputShape)
 
-        conv1 = Conv1D(filters = 16, kernel_size=6,padding = 'valid',activation ='linear', kernel_initializer='he_normal')(Inputs)
-        pool1 = GlobalAveragePooling1D()(conv1)
+        conv1 = Conv1D(filters = 16, kernel_size=3,padding = 'valid',activation ='linear', kernel_initializer='he_normal')(Inputs)
+        pool1 = GlobalMaxPooling1D()(conv1)
 
-        conv2 = Conv1D(filters = 16, kernel_size=7,padding = 'valid', activation ='linear', kernel_initializer='he_normal')(Inputs)
-        pool2 = GlobalAveragePooling1D()(conv2)
+        conv2 = Conv1D(filters = 16, kernel_size=4,padding = 'valid', activation ='linear', kernel_initializer='he_normal')(Inputs)
+        pool2 = GlobalMaxPooling1D()(conv2)
 
-        conv3 = Conv1D(filters = 16, kernel_size=8,padding = 'valid', activation ='linear', kernel_initializer='he_normal')(Inputs)
-        pool3 = GlobalAveragePooling1D()(conv3)
+        conv3 = Conv1D(filters = 16, kernel_size=5,padding = 'valid', activation ='linear', kernel_initializer='he_normal')(Inputs)
+        pool3 = GlobalMaxPooling1D()(conv3)
 
         concat = concatenate([pool1, pool2, pool3])
         #concat = tf.expand_dims(concat,-1)
@@ -76,12 +84,13 @@ def DL_model(X_num,X_emb):
 
     def create_lstm(dim):
         inputShape = (dim,1)
-        inputs = Input(shape = inputShape)
-
         
-        x = LSTM(20, return_sequences=True, kernel_initializer='he_normal')(inputs)
+        inputs = Input(shape = inputShape)
+        print(inputs.shape)
+        
+        x = Bidirectional(LSTM(20, return_sequences=True, kernel_initializer='he_normal'))(inputs)
         x = Dropout(0.2)(x)
-        x = LSTM(10, kernel_initializer='he_normal')(x)
+        x = Bidirectional(LSTM(10, kernel_initializer='he_normal'))(x)
         x = Dropout(0.2)(x)
         x = Dense(10,activation ='relu', kernel_initializer='he_normal')(x)
         model = Model(inputs,x)
@@ -92,39 +101,38 @@ def DL_model(X_num,X_emb):
     mlp = create_mlp(X_num.shape[1])
     cnn = create_1Dcnn(X_emb.shape[1])
     lstm = create_lstm((X_time.shape[1]))
-    #print(mlp.output, lstm.output)
 
     combinedInput = concatenate([mlp.output, cnn.output,lstm.output])
-    #combinedInput = tf.expand_dims(combinedInput,-1)
 
-    # our final FC layer head will have two dense layers, the final one
-    # being our regression head
-    #x = LSTM(5)(combinedInput)
     x = Dense(32, activation="selu")(combinedInput)
+    x = Dense(16, activation="selu")(x)
     x = BatchNormalization()(x)
     x = Dropout(0.3)(x)
-    x = Dense(8, activation="selu")(combinedInput)
-    x = BatchNormalization()(x)
-    x = Dropout(0.3)(x)
+    x = Dense(8, activation="selu")(x)
     x = Dense(1, activation="selu")(x)
 
     model = Model(inputs=[mlp.input, cnn.input, lstm.input], outputs=x)
+
+
     return model
 
 
 
-def DataLoad_DL(data_dir,timeseries_list_dir):
+
+def DataLoad_DL(data_dir,timeseries_list_dir,scaler_dir):
 
     data = joblib.load(data_dir)
     locals().update(data)
 
-    
-    
     X = data['X']
     y = data['y'] 
     y = np.log(y)
-    
-    
+
+    X_c = X.copy()
+    scaler = MinMaxScaler()
+    X_c = scaler.fit_transform(X_c)
+    X_tmp = pd.DataFrame(X_c, columns=X.columns, index=list(X.index.values))
+
     column_list =[]
     emb_list = ['v'+str(j) for j in range(0,110)]
     with open(timeseries_list_dir, 'rb') as f:
@@ -137,14 +145,18 @@ def DataLoad_DL(data_dir,timeseries_list_dir):
 
     num_list = column_list
 
-    X_num = X[num_list]
-    X_emb = X[emb_list]
+    X_num = X_tmp[num_list]
+    X_emb = X_tmp[emb_list]
     X_time = X_tmp[time_ser]
     X_time = X_time.fillna(0)
     X_num = X_num.fillna(0)
 
+    scaler_dir = scaler_dir + "scaler.pkl"
 
-    return X, X_num, X_emb, X_time, y
+    with open(scaler_dir, 'wb') as f:
+        pkl.dump(scaler, f)
+
+    return X_tmp, X_num, X_emb, X_time, y
 
 
 
@@ -155,26 +167,30 @@ def main():
     
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--data_dir', type=str, default='./train_FE.pkl')
-    parser.add_argument('--batch_size', type=str, default=256)
-    parser.add_argument('--model_dir', type=str, default='./model_3multiNet.h5',
-                        help='Directory name to save the checkpoints')
-    parser.add_argument('--timeS_dir', type=str, default='./timeseries_list.pkl',
-                        help='Directory name to save the checkpoints')
+    parser.add_argument('--data_dir', type=str, default= os.path.join('..', '..', '0.Data', '05_분석데이터', 'test_FE.pkl'))
+    parser.add_argument('--batch_size', type=int, default=256)
+    parser.add_argument('--epoch', type=int, default=4000)
+    parser.add_argument('--model_dir', type=str, default= './',
+                        help='Directory name to save the model')
+    parser.add_argument('--timeS_dir', type=str, default= './timeseries_list.pkl',
+                        help='Directory name to load the time series list')
+    parser.add_argument('--scaler_dir', type=str, default= './'),
+                        help='Directory name to load the time series list')
     args = parser.parse_args()
 
-    if args is None:
-      exit()
+    data_dir = arg.data_dir 
+    timeser_dir = arg.timeS_dir
+    scaler_dir = arg.scaler_dir
 
-    X, X_num, X_emb, X_time, y = DataLoad_DL(arg.data_dir, arg.timeS_dir)
-    model = DL_model(X_num,X_emb)
+    X, X_num, X_emb, X_time, y = DataLoad_DL(data_dir, timeser_dir,scaler_dir)
 
+    model = DL_model(X_num, X_emb, X_time)
     opt = Adam(lr=0.0001, decay=1e-3 / 200)
 
-    model.compile(loss= "mean_absolute_percentage_error",optimizer=opt)
+    model.compile(loss= tf.keras.losses.MSE, optimizer=opt)
     
-    reduceLR = ReduceLROnPlateau(monitor='loss', factor=0.5, patience=30)
-    earlystopping = EarlyStopping(monitor='loss',patience= 100)
+    reduceLR = ReduceLROnPlateau(monitor='loss', factor=0.1, patience=20)
+    earlystopping = EarlyStopping(monitor='loss',patience= 40)
     
     for i in range(1,13):
         print('처리중인 월:',i)
@@ -239,7 +255,7 @@ def main():
         model.fit(
         x=[X_train_num, X_train_emb, X_train_time], y=y_train,
         validation_data=([X_val_num, X_val_emb,X_val_time], y_val),
-        epochs=2000, batch_size = arg.batch_size,
+        epochs=agr.epoch, batch_size = arg.batch_size,
         callbacks = [reduceLR,earlystopping])
 
         y_pred = model.predict([X_test_num, X_test_emb,X_test_time])
@@ -254,7 +270,7 @@ def main():
                 print(f'{m}월\t', '[val]:', arg[0], '\t[test]', arg[1]) 
 
 
-        model.save(arg.model_dir) 
+        model.save(model_dir) 
 
 
 
