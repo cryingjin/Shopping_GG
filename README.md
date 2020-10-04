@@ -113,5 +113,5 @@ Rec_model 폴더를 참고하면 됩니다.
 
 HTML 파일이 실행결과입니다.
 
-## 최종보고서
+## 최종보고서 :clipboard:
 You can check our report [here](https://drive.google.com/file/d/11mZn7tsR0U7DvrMJ-D19wSfBRIyI9or5/view?usp=sharing)
