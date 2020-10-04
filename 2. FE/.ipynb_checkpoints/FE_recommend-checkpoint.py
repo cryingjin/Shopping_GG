@@ -13,27 +13,99 @@ import numpy as np
 import pandas as pd
 import argparse
 from tqdm import tqdm
-from datetime import datetime, time
+import datetime
+from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import StandardScaler, PolynomialFeatures, LabelEncoder, MinMaxScaler
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', required = True)
-# parser.add_argument('--type', required = True)
 args = parser.parse_args()
 
 sale = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', '2020 빅콘테스트 데이터분석분야-챔피언리그_2019년 실적데이터_v1_200818.xlsx'), skiprows = 1)
-
 sale = sale.loc[(sale['상품군'] != '무형') & (sale['취급액'].notnull())]
+
+meta_train = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
+meta_test = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', 'test수작업_meta.xlsx'))
+meta_train = meta_train.loc[meta_train['상품군'] != '무형']
+meta_test = meta_test.loc[meta_test['상품군'] != '무형']
+meta = pd.concat([meta_train, meta_test], axis = 0)
+item = meta.loc[meta['NEW상품명'].notnull(), ['NEW상품명', '상품군', '마더코드']].drop_duplicates('NEW상품명').reset_index(drop = True).reset_index().rename(columns = {'index' : 'NEW상품코드'})
+item2 = item[['NEW상품코드', 'NEW상품명', '상품군', '마더코드']]
 
 sale['방송날'] = sale['방송일시'].dt.date
 sale['방송월'] = sale['방송일시'].dt.month
 sale['방송일'] = sale['방송일시'].dt.day
 sale['방송시간(시간)'] = sale['방송일시'].dt.hour
-sale['방송일시'] = sale.apply(lambda x : datetime.combine(x['방송날'], time(x['방송시간(시간)'])), axis = 1)
+sale['방송일시'] = sale.apply(lambda x : datetime.datetime.combine(x['방송날'], datetime.time(x['방송시간(시간)'])), axis = 1)
 
 sale['판매량'] = sale['취급액'] / sale['판매단가']
 sale['판매량'] = sale['판매량'].fillna(0).apply(lambda x : math.ceil(x))
 
+data = joblib.load(os.path.join('..', '..', '0.Data', '04_임시데이터', 'recommend_candidate.pkl'))
+locals().update(data)
+
+
+user_item_based = {}
+for u in user_based.keys():
+    user_item_based[u] = []
+    for n in user_based[u]:
+        v = raw.loc[n].sort_values(ascending = False).index[0]
+        res = item_based[v]
+        user_item_based[u].extend(res)
+        
+        
+us = users[['user', 'segment']]
+candidate = {}
+for i, s in tqdm(us.values):
+    try:
+        c1 = user_item_based[i]
+        c2 = user_content[i]
+        c3 = rec1[s]
+        c4 = rec2[s]
+    except:
+        continue
+    candidate[i]= list(set(c1 + c2 + c3 + c4))
+
+final = {}
+for k in candidate.keys():
+    v = list(item2.loc[item2['마더코드'].isin(candidate[k]), 'NEW상품코드'].values)
+    final[k] = v
+
+total = pd.DataFrame()
+for k in tqdm(final.keys()):
+    mon = int(k.split('-')[0])
+    hour = int(k.split('-')[1])
+    
+    d = datetime.date(2020, mon, 1)
+    t = datetime.time(hour)
+    
+    dt = datetime.datetime.combine(d, t)
+    
+    temp = pd.DataFrame(final[k])
+    temp['방송일시'] = dt
+    total = pd.concat([total, temp])
+total = total.rename(columns = {0 : 'NEW상품코드'})
+
+meta_train = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
+meta_test = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', 'test수작업_meta.xlsx'))
+meta_train = meta_train.loc[meta_train['상품군'] != '무형']
+meta_test = meta_test.loc[meta_test['상품군'] != '무형']
+meta = pd.concat([meta_train, meta_test], axis = 0)
+
+item = meta.loc[meta['NEW상품명'].notnull(), ['NEW상품명', '상품군', '마더코드']].drop_duplicates('NEW상품명').reset_index(drop = True).reset_index().rename(columns = {'index' : 'NEW상품코드'})
+
+meta = meta.merge(item[['NEW상품명', 'NEW상품코드']], on = 'NEW상품명', how = 'left').drop_duplicates('NEW상품명')
+
+res = total.merge(meta, on = 'NEW상품코드', how = 'left')[['방송일시', '마더코드', '상품코드', '상품명', '상품군', '모델명', '상품명다시', '판매단가', '결제방법', '브랜드', 'NEW상품명', '성별','단위', '옵션','NS카테고리']]
+res = res.sort_values(['방송일시'])
+res["노출(분)"] = 20
+res = res[['방송일시', '노출(분)', '마더코드', '상품코드', '상품명', '상품군', '판매단가', '결제방법', '브랜드', '모델명', '상품명다시', 'NEW상품명', '성별','단위', '옵션','NS카테고리']]
+res['취급액'] = None
+
+res = res.reset_index(drop = True)
+res.to_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4recommend.xlsx'), index = False)
+    
+    
 if args.dataset == 'train':
     ## ======== 각 상품군별 시계열 Feature 생성 ========
     print('========== Start TimeSeries FE preprocessing for Recommend==========')
@@ -56,10 +128,6 @@ if args.dataset == 'train':
             sig = macd.ewm(span=9).mean()
             rol14 = pivT.fillna(0).rolling(1).mean()
             rol30 = pivT.fillna(0).rolling(3).mean()
-
-    #     for tb, column in zip([ema_s, ema_m, ema_l, macd, sig, rol14, rol30], ['ema_s', 'ema_m', 'ema_l', 'macd', 'sig', 'rol14', 'rol30']):
-    #     new_columns = list(map(lambda x : '_'.join((column, x, types)), tb.columns))
-    #     tb.columns = new_columns
 
         timeFE = pd.concat([ema_s, ema_m, ema_l, macd, sig, rol14, rol30], axis = 1).reset_index()
 

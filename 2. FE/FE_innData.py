@@ -20,13 +20,15 @@ def engineering_data(df, dataset):
         meta = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
         df = df.merge(meta[['상품코드', 'NEW상품명', '브랜드', '결제방법', '상품명다시', '단위', '모델명', '성별', 'NS카테고리', '옵션']], on = '상품코드', how = 'left')
         item = meta[['NEW상품명', '상품군']].drop_duplicates().reset_index(drop = True).reset_index().rename(columns = {'index' : 'NEW상품코드'})
-    elif dataset == 'test':
+    elif dataset == 'test' or dataset == 'recommend':
         # 수작업 데이터 불러오기 (2019 제공데이터를 가지고 수작업 한 파일 + 2020 평가데이터를 가지고 수작업 한 파일)
         meta_train = pd.read_excel(os.path.join('..', '..', '0.Data', '01_제공데이터', 'train수작업_meta.xlsx'))
         meta_test = pd.read_excel(os.path.join('..', '..', '0.Data', '02_평가데이터', 'test수작업_meta.xlsx'))
         meta = pd.concat([meta_train, meta_test], axis = 0)
         meta = meta.loc[meta['상품군'] != '무형'].drop_duplicates('상품코드')
-        df = df.merge(meta[['상품코드', 'NEW상품명', '브랜드', '결제방법', '상품명다시', '단위', '모델명', '성별', 'NS카테고리', '옵션']], on = '상품코드', how = 'left')
+        
+        if dataset == 'test':
+            df = df.merge(meta[['상품코드', 'NEW상품명', '브랜드', '결제방법', '상품명다시', '단위', '모델명', '성별', 'NS카테고리', '옵션']], on = '상품코드', how = 'left')
         item = meta[['NEW상품명', '상품군']].drop_duplicates().reset_index(drop = True).reset_index().rename(columns = {'index' : 'NEW상품코드'})
     else:
         print('dataset error.....')
@@ -266,10 +268,10 @@ def engineering_order(df, dataset):
             'volume4hour' : temp_hour,
             'volume4minute' : temp_minute
         },
-            os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4volume.pkl'))
+            os.path.join('..', '..', '0.Data', '04_임시데이터', 'data4volume.pkl'))
         
-    elif dataset == 'test':
-        volume = joblib.load(os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4volume.pkl'))
+    elif dataset == 'test' or dataset == 'recommend':
+        volume = joblib.load(os.path.join('..', '..', '0.Data', '04_임시데이터', 'data4volume.pkl'))
         temp_month = volume['volume4month']
         temp_hour = volume['volume4hour']
         temp_minute = volume['volume4minute']
@@ -341,7 +343,7 @@ def engineering_timeSeries(df, dataset):
         joblib.dump(timeS,
                    os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4time.pkl'))
         
-    elif dataset == 'test':
+    elif dataset == 'test' or dataset == 'recommend':
         
         timeS = joblib.load(os.path.join('..', '..', '0.Data', '01_제공데이터', 'data4time.pkl'))
         df['방송날'] = df['방송날'].apply(lambda x : x - relativedelta(years=1))
