@@ -1,0 +1,1 @@
+{"learning_rate": 0.2905869661440769, "depth": 6, "l2_leaf_reg": 2, "random_strength": 7.380259907093835e-05, "border_count": 137, "bootstrap_type": "Bayesian", "boosting_type": "Ordered", "verbose": 5000, "random_seed": 0, "thread_count": 8, "task_type": "GPU", "loss_function": "MAPE", "iterations": 30000, "allow_writing_files": false}
