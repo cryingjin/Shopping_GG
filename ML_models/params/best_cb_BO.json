@@ -1,0 +1,1 @@
+{"learning_rate": 0.065, "depth": 10, "border_count": 199, "verbose": 5000, "random_seed": 77, "thread_count": 8, "task_type": "GPU", "eval_metric": "MAPE", "bagging_temperature": 0.338, "min_data_in_leaf": 117, "iterations": 30000, "od_type": "Iter", "metric_period": 50, "od_wait": 20, "thread_count": -1}

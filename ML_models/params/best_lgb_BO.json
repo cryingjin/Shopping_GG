@@ -1,0 +1,1 @@
+{"colsample_bytree": 0.5, "device_type": "gpu", "is_training_metric": true, "learning_rate": 0.01, "max_bin": 34, "max_depth": 56, "metric": "mape", "min_child_samples": 16, "min_split_gain": 0.005, "n_jobs": -1, "num_iterations": 30000, "num_leaves": 59, "objective": "regression", "reg_lambda": 0.01, "subsample": 0.9, "subsample_freq": 0, "verbose": -1}

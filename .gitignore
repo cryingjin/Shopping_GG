@@ -1,0 +1,12 @@
+*.pdf
+*.pkl
+*.pickle
+*.csv
+*.xlsx
+/data
+*.h5
+*.png
+*.DS_Store
+/__pycache__
+*.html
+/catboost_info
