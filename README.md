@@ -1,6 +1,5 @@
 # 쇼핑광고등어_코드설명
 
-# 쇼핑광고등어 코드설명 README 파일
 
 - 재현가능한 코드들과 제출 파일들의 설명을 담고 있는 README 파일입니다.
 - 데이터 전처리 및 분석과정 Raw 데이터 일체(Zip형식), 프로그램 코딩자료 제출가 모두 들어가있습니다.
@@ -113,3 +112,6 @@ Deep learning model 의 코드 설명 및 실행결과 파일은 다음 경로�
 Rec_model 폴더를 참고하면 됩니다.
 
 HTML 파일이 실행결과입니다.
+
+## 최종보고서
+You can check our report [here](https://drive.google.com/file/d/11mZn7tsR0U7DvrMJ-D19wSfBRIyI9or5/view?usp=sharing)
