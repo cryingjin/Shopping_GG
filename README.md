@@ -86,7 +86,9 @@
 
 ```python
 # 데이터 전처리는 FE_main.py 실행
-!python FE_main.py
+!python FE_main.py --dataset=train
+!python FE_main.py --dataset=test
+!python FE_main.py --dataset=recommend
 
 # ML_models 폴더에서 실행
 cd ML_models
