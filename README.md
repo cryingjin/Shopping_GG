@@ -115,3 +115,15 @@ HTML 파일이 실행결과입니다.
 
 ## 최종보고서 :clipboard:
 You can check our report [here](https://drive.google.com/file/d/11mZn7tsR0U7DvrMJ-D19wSfBRIyI9or5/view?usp=sharing)
+
+## Contributors
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/minjung-s"><img src="https://user-images.githubusercontent.com/41895063/96987616-3974d800-155e-11eb-8dee-55ef4a423563.jpg" width="100px;" alt=""/><br /><sub><b>MinJung Shin</b></sub></a><br /><a href="https://github.com/cryingjin/Shopping_GG/commits?author=minjung-s" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/jinseock95"><img src="https://user-images.githubusercontent.com/41895063/96989102-2e22ac00-1560-11eb-84e4-0584c51bbe60.png" width="100px;" alt=""/><br /><sub><b>JinSeok Oh</b></sub></a><br /><a href="https://github.com/cryingjin/Shopping_GG/commits?author=jinseock95" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/cryingjin"><img src="https://user-images.githubusercontent.com/41895063/96989335-7fcb3680-1560-11eb-95d1-7cbb4fc4dd18.png" width="100px;" alt=""/><br /><sub><b>YeJin Lee</b></sub></a><br /><a href="https://github.com/cryingjin/Shopping_GG/commits?author=cryingjin" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/jbeen2"><img src="https://user-images.githubusercontent.com/41895063/96989477-b0ab6b80-1560-11eb-9beb-64f5253ccb2a.png" width="100px;" alt=""/><br /><sub><b>JaeBeen Lee</b></sub></a><br /><a href="https://github.com/cryingjin/Shopping_GG/commits?author=jbeen2" title="Code">💻</a></td>
