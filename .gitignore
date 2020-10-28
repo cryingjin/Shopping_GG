@@ -8,5 +8,4 @@
 *.png
 *.DS_Store
 /__pycache__
-*.html
 /catboost_info
